@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Etl.Core", "Etl.Core\Etl.Core.csproj", "{66D16B79-C764-47D7-BB01-E39892008C0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Etl.Tests", "Etl.Tests\Etl.Tests.csproj", "{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{66D16B79-C764-47D7-BB01-E39892008C0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66D16B79-C764-47D7-BB01-E39892008C0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66D16B79-C764-47D7-BB01-E39892008C0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66D16B79-C764-47D7-BB01-E39892008C0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
