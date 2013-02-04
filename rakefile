@@ -1,6 +1,6 @@
 require 'albacore'
 
-PRODUCT_NAME = "Etl"
+PRODUCT_NAME = "EtlGate"
 COMPILE_TARGET = ENV['compile_mode'].nil? ? "Debug" : ENV['compile_mode']
 CLR_TOOLS_VERSION = "v4.0.30319"
 DEFAULT_BUILD_NUMBER = "0.0.0"
@@ -42,7 +42,7 @@ msbuild :build => [:clean, :assemblyinfo] do |msb|
   sleep 1
   puts "Copying files from bin folders to the build folder (#{props[:stage]})..."
   copy_output_files "src/#{PRODUCT_NAME}.Core/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", props[:stage]
-  copy_output_files "src/#{PRODUCT_NAME}.Tests/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", props[:stage]
+  copy_output_files "src/#{PRODUCT_NAME}.Core.Tests/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", props[:stage]
 end
 
 desc "Prepares the working directory for a new build"
@@ -59,7 +59,7 @@ nunit :test do |nunit|
   puts "Running the unit tests in the build folder (#{props[:stage]})..."
   nunit.command = nunit_cmd
   nunit.options "/framework #{CLR_TOOLS_VERSION}"
-  nunit.assemblies "#{props[:stage]}/#{PRODUCT_NAME}.Tests.dll"
+  nunit.assemblies "#{props[:stage]}/#{PRODUCT_NAME}.Core.Tests.dll"
 end
 
 desc "Zips up the build results"

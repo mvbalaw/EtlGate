@@ -1,4 +1,4 @@
-﻿namespace Etl.Core
+﻿namespace EtlGate.Core
 {
 	public class HelloWorld
 	{

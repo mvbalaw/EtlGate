@@ -1,6 +1,6 @@
 using StructureMap.Configuration.DSL;
 
-namespace Etl.Core
+namespace EtlGate.Core
 {
 	public class StructureMapRegistry : Registry
 	{

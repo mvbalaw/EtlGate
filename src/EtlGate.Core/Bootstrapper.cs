@@ -1,6 +1,6 @@
 ﻿using StructureMap;
 
-namespace StarterTree.Core
+namespace EtlGate.Core
 {
 	public class Bootstrapper : IBootstrapper
 	{

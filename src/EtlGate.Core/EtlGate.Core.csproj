@@ -8,8 +8,8 @@
     <ProjectGuid>{66D16B79-C764-47D7-BB01-E39892008C0F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Etl.Core</RootNamespace>
-    <AssemblyName>Etl.Core</AssemblyName>
+    <RootNamespace>EtlGate.Core</RootNamespace>
+    <AssemblyName>EtlGate.Core</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

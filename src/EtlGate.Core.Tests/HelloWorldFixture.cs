@@ -1,10 +1,8 @@
-﻿using Etl.Core;
-
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 using StructureMap;
 
-namespace StarterTree.Tests
+namespace EtlGate.Core.Tests
 {
 	[TestFixture]
 	public class When_created_using_new_and_asked_to_speak
