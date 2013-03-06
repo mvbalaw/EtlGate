@@ -22,12 +22,13 @@ namespace EtlGate.Core.Tests
 			[SetUp]
 			public void Before_each_test()
 			{
-				_reader = new CsvReader(new StreamTokenizer());
+				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
 			}
 
 			[Test]
-			public void BreakIt()
+			public void FuzzTestIt()
 			{
+				var anyBreakage = false;
 				const string values = "a\r\n,\"";
 				var random = new Random();
 				for (var i = 0; i < 1000; i++)
@@ -66,9 +67,11 @@ namespace EtlGate.Core.Tests
 						{
 							continue;
 						}
+						anyBreakage = true;
 						Console.WriteLine("exception with input '" + input.ToString().Replace("\r", "RETURN").Replace("\n", "NEWLINE") + "' : " + e);
 					}
 				}
+				anyBreakage.ShouldBeFalse();
 			}
 
 			[Test]
@@ -160,6 +163,46 @@ namespace EtlGate.Core.Tests
 							             {
 								             { "Field1", "a,b" },
 								             { "Field2", "c" }
+							             }
+					             });
+			}
+			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
+			public void Given_a_stream_containing__QUOTE_RETURN_NEWLINE_QUOTE_RETURN__should_throw_a_parse_exception_due_to_unescaped_quote()
+			{
+				const string input = "\"\r\n\"\r";
+				Check(input, new[]
+					             {
+						             new Dictionary<string, string>
+							             {
+								             { "Field1", "\r\n\"\r" }
+							             }
+					             });
+			}
+			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
+			public void Given_a_stream_containing__QUOTE_a_QUOTE_RETURN_RETURN_NEWLINE_a_COMMA_aa__should_throw_a_parse_exception_due_to_unescaped_quote()
+			{
+				const string input = "\"a\"\r\r\na,aa";
+				Check(input, new[]
+					             {
+						             new Dictionary<string, string>
+							             {
+								             { "Field1", "a\"\r\r\na,aa" }
+							             }
+					             });
+			}
+			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
+			public void Given_a_stream_containing__x__should_throw_a_parse_exception_due_to_unescaped_quote()
+			{
+				//",,"RETURN,,aaa
+				const string input = "\",,\"\r,,aaa";
+				Check(input, new[]
+					             {
+						             new Dictionary<string, string>
+							             {
+								             { "Field1", ",," }
 							             }
 					             });
 			}
@@ -510,149 +553,152 @@ namespace EtlGate.Core.Tests
 					             }, null);
 			}
 
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_1()
-//			{
-//				const string input = "cc,\"b\",bb\n";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items[0].Value.ShouldBeEqualTo("cc");
-//				items[1].Value.ShouldBeEqualTo("b");
-//				items[1].IsQuoted.ShouldBeTrue();
-//				items[2].Value.ShouldBeEqualTo("bb\n");
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_10()
-//			{
-//				const string input = "\",\"\r\rab,,\"";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items.Count.ShouldBeEqualTo(1);
-//				items[0].Value.ShouldBeEqualTo(",\"\r\rab,,");
-//				items[0].IsQuoted.ShouldBeTrue();
-//				items[0].ErrorUnescapedQuote.ShouldBeTrue();
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_2()
-//			{
-//				const string input = "\n\"c,,\"\"\"c\"";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items[0].Value.ShouldBeEqualTo("\n\"c");
-//				items[1].Value.ShouldBeEqualTo("");
-//				items[2].Value.ShouldBeEqualTo("\"c");
-//				items[2].IsQuoted.ShouldBeTrue();
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_3()
-//			{
-//				const string input = ",c,\"\"\"a,a\"";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items[0].Value.ShouldBeEqualTo("");
-//				items[1].Value.ShouldBeEqualTo("c");
-//				items[2].Value.ShouldBeEqualTo("\"a,a");
-//				items[2].IsQuoted.ShouldBeTrue();
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_4()
-//			{
-//				const string input = "\r\n,\"\nab,\"";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(2);
-//				var items = result.First();
-//				items.Count.ShouldBeEqualTo(1);
-//				items[0].Value.ShouldBeEqualTo("");
-//				items[0].IsQuoted.ShouldBeFalse();
-//				items = result.Last();
-//				items.Count.ShouldBeEqualTo(2);
-//				items[0].Value.ShouldBeEqualTo("");
-//				items[0].IsQuoted.ShouldBeFalse();
-//				items[1].Value.ShouldBeEqualTo("\nab,");
-//				items[1].IsQuoted.ShouldBeTrue();
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_5()
-//			{
-//				const string input = "\"\"\r\nbca,,a";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(2);
-//				var items = result.First();
-//				items[0].Value.ShouldBeEqualTo("");
-//				items[0].IsQuoted.ShouldBeTrue();
-//				items = result.Last();
-//				items.Count.ShouldBeEqualTo(3);
-//				items[0].Value.ShouldBeEqualTo("bca");
-//				items[1].Value.ShouldBeEqualTo("");
-//				items[2].Value.ShouldBeEqualTo("a");
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_6()
-//			{
-//				const string input = "\"\"\"a\n\rcbac";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items.Count.ShouldBeEqualTo(1);
-//				items[0].Value.ShouldBeEqualTo("\"a\n\rcbac");
-//				items[0].IsQuoted.ShouldBeTrue();
-//				items[0].ErrorMissingTrailingQuote.ShouldBeTrue();
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_7()
-//			{
-//				const string input = "cc\r,bba\r\rb";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items.Count.ShouldBeEqualTo(2);
-//				items[0].Value.ShouldBeEqualTo("cc\r");
-//				items[1].Value.ShouldBeEqualTo("bba\r\rb");
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_8()
-//			{
-//				const string input = "\"b\"\"\"a";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items.Count.ShouldBeEqualTo(1);
-//				items[0].Value.ShouldBeEqualTo("b\"\"a");
-//				items[0].ErrorUnescapedQuote.ShouldBeTrue();
-//			}
-//
-//			[Test]
-//			[Ignore]
-//			public void TestGetExpected_9()
-//			{
-//				const string input = "\r";
-//				var result = GetExpected(input).ToList();
-//				result.Count.ShouldBeEqualTo(1);
-//				var items = result.First();
-//				items.Count.ShouldBeEqualTo(1);
-//				items[0].Value.ShouldBeEqualTo("\r");
-//			}
+			[Test]
+			public void TestGetExpected_1()
+			{
+				const string input = "cc,\"b\",bb\n";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items[0].Value.ShouldBeEqualTo("cc");
+				items[1].Value.ShouldBeEqualTo("b");
+				items[1].IsQuoted.ShouldBeTrue();
+				items[2].Value.ShouldBeEqualTo("bb\n");
+			}
+
+			[Test]
+			public void TestGetExpected_10()
+			{
+				const string input = "\",\"\r\rab,,\"";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(1);
+				items[0].Value.ShouldBeEqualTo(",\"\r\rab,,");
+				items[0].IsQuoted.ShouldBeTrue();
+				items[0].ErrorUnescapedQuote.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_11()
+			{
+				const string input = "\",a\"\r";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(1);
+				items[0].Value.ShouldBeEqualTo(",a\"\r");
+				items[0].IsQuoted.ShouldBeTrue();
+				items[0].ErrorUnescapedQuote.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_2()
+			{
+				const string input = "\n\"c,,\"\"\"c\"";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items[0].Value.ShouldBeEqualTo("\n\"c");
+				items[1].Value.ShouldBeEqualTo("");
+				items[2].Value.ShouldBeEqualTo("\"c");
+				items[2].IsQuoted.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_3()
+			{
+				const string input = ",c,\"\"\"a,a\"";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items[0].Value.ShouldBeEqualTo("");
+				items[1].Value.ShouldBeEqualTo("c");
+				items[2].Value.ShouldBeEqualTo("\"a,a");
+				items[2].IsQuoted.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_4()
+			{
+				const string input = "\r\n,\"\nab,\"";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(2);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(1);
+				items[0].Value.ShouldBeEqualTo("");
+				items[0].IsQuoted.ShouldBeFalse();
+				items = result.Last();
+				items.Count.ShouldBeEqualTo(2);
+				items[0].Value.ShouldBeEqualTo("");
+				items[0].IsQuoted.ShouldBeFalse();
+				items[1].Value.ShouldBeEqualTo("\nab,");
+				items[1].IsQuoted.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_5()
+			{
+				const string input = "\"\"\r\nbca,,a";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(2);
+				var items = result.First();
+				items[0].Value.ShouldBeEqualTo("");
+				items[0].IsQuoted.ShouldBeTrue();
+				items = result.Last();
+				items.Count.ShouldBeEqualTo(3);
+				items[0].Value.ShouldBeEqualTo("bca");
+				items[1].Value.ShouldBeEqualTo("");
+				items[2].Value.ShouldBeEqualTo("a");
+			}
+
+			[Test]
+			public void TestGetExpected_6()
+			{
+				const string input = "\"\"\"a\n\rcbac";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(1);
+				items[0].Value.ShouldBeEqualTo("\"a\n\rcbac");
+				items[0].IsQuoted.ShouldBeTrue();
+				items[0].ErrorMissingTrailingQuote.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_7()
+			{
+				const string input = "cc\r,bba\r\rb";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(2);
+				items[0].Value.ShouldBeEqualTo("cc\r");
+				items[1].Value.ShouldBeEqualTo("bba\r\rb");
+			}
+
+			[Test]
+			public void TestGetExpected_8()
+			{
+				const string input = "\"b\"\"\"a";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(1);
+				items[0].Value.ShouldBeEqualTo("b\"\"a");
+				items[0].ErrorUnescapedQuote.ShouldBeTrue();
+			}
+
+			[Test]
+			public void TestGetExpected_9()
+			{
+				const string input = "\r";
+				var result = GetExpected(input).ToList();
+				result.Count.ShouldBeEqualTo(1);
+				var items = result.First();
+				items.Count.ShouldBeEqualTo(1);
+				items[0].Value.ShouldBeEqualTo("\r");
+			}
 
 			private void Check(string input, IList<Dictionary<string, string>> expect, string recordSeparator = "\r\n", bool hasHeaderRow = false)
 			{
@@ -784,6 +830,11 @@ namespace EtlGate.Core.Tests
 				}
 				if (haveReturn)
 				{
+					if (expectQuote)
+					{
+						item.Value += "\"";
+						item.ErrorUnescapedQuote = true;
+					}
 					item.Value += "\r";
 				}
 				if (item.Value.Length > 0 || item.IsQuoted)
