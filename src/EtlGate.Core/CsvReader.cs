@@ -3,7 +3,12 @@ using System.IO;
 
 namespace EtlGate.Core
 {
-	public class CsvReader
+	public interface ICsvReader
+	{
+		IEnumerable<Dictionary<string, string>> ReadFrom(Stream stream, string recordSeparator = "\r\n", bool hasHeaderRow = false);
+	}
+
+	public class CsvReader : ICsvReader
 	{
 		private readonly IDelimitedDataReader _delimitedDataReader;
 
