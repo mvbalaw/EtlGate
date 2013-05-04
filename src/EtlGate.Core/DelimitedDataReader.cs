@@ -285,11 +285,25 @@ namespace EtlGate.Core
 			{
 				parseContext.ReadingHeaderRow = false;
 				parseContext.HeaderRow = new Dictionary<string, string>(row);
+				CheckHeaderRowForDuplicateFieldNames(row);
 				row.Clear();
 				return false;
 			}
 			parseContext.RecordNumber++;
 			return true;
+		}
+
+		private static void CheckHeaderRowForDuplicateFieldNames(Dictionary<string, string> row)
+		{
+			var reverseLookup = new Dictionary<string, string>();
+			foreach (var field in row)
+			{
+				if (reverseLookup.ContainsKey(field.Value))
+				{
+					throw new ParseException(String.Format("Header row must not have more than one field with the same name. '{0}' appears more than once in the header row.", field.Value));
+				}
+				reverseLookup.Add(field.Value, field.Key);
+			}
 		}
 
 		private static bool ReadUnquotedField(Token token, Dictionary<string, string> row, ParseContext parseContext)

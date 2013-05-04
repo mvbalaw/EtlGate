@@ -312,6 +312,18 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Header row must not have more than one field with the same name. 'Field1' appears more than once in the header row.")]
+			public void Given_a_stream_containing_a_header_row__should_throw_ParseException_for_two_header_rows_with_same_name()
+			{
+				const string input = "Field1,Field1\r\nValue1,Value2";
+				const string fieldSeparator = ",";
+				const bool supportQuotedFields = true;
+				const bool hasHeaderRow = true;
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				_reader.ReadFrom(stream, fieldSeparator, "\r\n", supportQuotedFields, hasHeaderRow);
+			}
+
+			[Test]
 			[Ignore("Still has failures for long field separators that contain the record separator")]
 			public void FuzzTestIt()
 			{
