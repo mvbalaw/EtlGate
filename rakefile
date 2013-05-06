@@ -7,12 +7,41 @@ DEFAULT_BUILD_NUMBER = "0.0.0"
 COMPANY_NAME = "MVBA, P.C."
 COPYRIGHT = "MVBA, P.C. (c) 2011-2012"
 ARTIFACTS = File.expand_path("dist")
+STAGE = File.expand_path("build")
+SETTINGS_DIR = "settings"
 
 nunit_cmd = "tools/NUnit/bin/nunit-console.exe"
 
 beginning = Time.now
 
-props = { :stage => File.expand_path("build"), :artifacts => ARTIFACTS }
+default_settings = { :artifacts => ARTIFACTS, 
+					 :stage => STAGE
+					}
+
+def read_config(settings_directory, env)
+	settings = {}
+	default_settings_file = "#{settings_directory}/#{env}.default.yaml"
+	if File.exists?(default_settings_file) then
+		settings = YAML.load_file(default_settings_file)
+	end
+	settings_file = "#{settings_directory}/#{env}.yaml"
+	if File.exists?(settings_file) then
+		overrides = YAML.load_file(settings_file)
+		overrides.each do |k,v|
+			settings[k] = v
+		end	
+	end
+	return settings
+end
+
+environment = ENV['environment']
+settings = read_config(SETTINGS_DIR, environment)
+default_settings.each { |key, val| if settings[key].nil? then settings[key] = default_settings[key] end }
+
+puts "Rakefile settings:"
+settings.each { |key, val| puts "#{key} => #{val}" }
+puts
+
 
 desc "** Default **"
 task :default => [:build, :test, :archive] do
@@ -40,37 +69,37 @@ msbuild :build => [:clean, :assemblyinfo] do |msb|
   msb.solution = "src/#{PRODUCT_NAME}.sln"
   msb.verbosity = "quiet"
   sleep 1
-  puts "Copying files from bin folders to the build folder (#{props[:stage]})..."
-  copy_output_files "src/#{PRODUCT_NAME}.Core/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", props[:stage]
-  copy_output_files "src/#{PRODUCT_NAME}.Core.Tests/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", props[:stage]
+  puts "Copying files from bin folders to the build folder (#{settings[:stage]})..."
+  copy_output_files "src/#{PRODUCT_NAME}.Core/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", settings[:stage]
+  copy_output_files "src/#{PRODUCT_NAME}.Core.Tests/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", settings[:stage]
 end
 
 desc "Prepares the working directory for a new build"
 task :clean do
-  FileUtils.rm_rf props[:stage]  
+  FileUtils.rm_rf settings[:stage]  
   # work around nasty latency issue where folder still exists for a short while after it is removed
-  wait_for { !Dir.exists?(props[:stage]) }
-  Dir.mkdir props[:stage]
-  Dir.mkdir props[:artifacts] unless Dir.exists?(props[:artifacts])
+  wait_for { !Dir.exists?(settings[:stage]) }
+  Dir.mkdir settings[:stage]
+  Dir.mkdir settings[:artifacts] unless Dir.exists?(settings[:artifacts])
 end
 
 desc "Runs the unit tests"
 nunit :test do |nunit|
-  puts "Running the unit tests in the build folder (#{props[:stage]})..."
+  puts "Running the unit tests in the build folder (#{settings[:stage]})..."
   nunit.command = nunit_cmd
   nunit.options "/framework #{CLR_TOOLS_VERSION}"
-  nunit.assemblies "#{props[:stage]}/#{PRODUCT_NAME}.Core.Tests.dll"
+  nunit.assemblies "#{settings[:stage]}/#{PRODUCT_NAME}.Core.Tests.dll"
 end
 
 desc "Zips up the build results"
 zip :archive do |zip|
-  puts "Zipping up the build folder and copying to artifacts folder (#{props[:artifacts]})..."
-  mkdir props[:artifacts] unless Dir.exists?(props[:artifacts])
+  puts "Zipping up the build folder and copying to artifact folder (#{settings[:artifacts]})..."
+  mkdir settings[:artifacts] unless Dir.exists?(settings[:artifacts])
   build_number = get_build_number
-  zip.directories_to_zip = [props[:stage]]
+  zip.directories_to_zip = [settings[:stage]]
   zip.output_file = "#{PRODUCT_NAME}_#{build_number}.#{COMPILE_TARGET}.zip"
-  zip.output_path = [props[:artifacts]]
-  puts "Artifacts are available in the artifact folder: #{props[:artifacts]}"
+  zip.output_path = [settings[:artifacts]]
+  puts "Artifacts are available in the artifact folder: #{settings[:artifacts]}"
 end
 
 
