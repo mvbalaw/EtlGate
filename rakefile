@@ -82,7 +82,7 @@ end
 
 def get_build_number
   begin
-    gittag = `git describe --long`.chomp # looks something like v0.1.0-63-g3f10c2e
+    gittag = `"C:\\Program Files (x86)\\Git\\bin\\git.exe" describe --long`.chomp # looks something like v0.1.0-63-g3f10c2e
     #puts "gittag: #{gittag}"
     parts = gittag.split("-")
     base_version = parts[0].gsub("v","")
@@ -99,7 +99,7 @@ end
 
 def get_build_number_with_hash
   begin
-    gittag = `git describe --long`.chomp # looks something like v0.1.0-63-g3f10c2e
+    gittag = `"C:\\Program Files (x86)\\Git\\bin\\git.exe" describe --long`.chomp # looks something like v0.1.0-63-g3f10c2e
     #puts "gittag: #{gittag}"
     parts = gittag.split("-")
     base_version = parts[0].gsub("v","")
