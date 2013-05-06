@@ -320,7 +320,9 @@ namespace EtlGate.Core.Tests
 				const bool supportQuotedFields = true;
 				const bool hasHeaderRow = true;
 				var stream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-				_reader.ReadFrom(stream, fieldSeparator, "\r\n", supportQuotedFields, hasHeaderRow);
+				var result = _reader.ReadFrom(stream, fieldSeparator, "\r\n", supportQuotedFields, hasHeaderRow);
+				result.GetEnumerator().MoveNext();
+
 			}
 
 			[Test]
