@@ -1,2 +1,2 @@
-:artifacts: 'c:/projects/etlgate/dist3/'
-:stage: 'c:/projects/etlgate/build3'
+:artifacts: '//archive1/term/SERVER/BuildAgents/etlgate/master'
+:stage: 'c:/projects/etlgate/build'

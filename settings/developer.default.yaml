@@ -1,2 +1,2 @@
-:artifacts: 'c:/projects/etlgate/dist2/'
-:stage: 'c:/projects/etlgate/build2/'
+:artifacts: 'c:/projects/etlgate/dist/'
+:stage: 'c:/projects/etlgate/build/'
