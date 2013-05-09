@@ -93,7 +93,7 @@ namespace EtlGate.Core
 			{
 				if (parseContext.Handle == StartReadField)
 				{
-					parseContext.FieldNumber++;
+					parseContext.IncrementFieldNumber();
 				}
 				AddFieldValue(row, parseContext);
 			}
@@ -105,7 +105,7 @@ namespace EtlGate.Core
 
 		private static void AddFieldValue(Dictionary<string, string> row, ParseContext parseContext)
 		{
-			var key = "Field" + parseContext.FieldNumber;
+			var key = parseContext.FieldNumberNames[parseContext.FieldNumber - 1];
 			AddFieldValue(row, parseContext, key);
 		}
 
@@ -116,7 +116,8 @@ namespace EtlGate.Core
 			if (parseContext.HasHeaderRow && parseContext.HeaderRow != null)
 			{
 				string headerKey;
-				if (parseContext.HeaderRow.TryGetValue("Field" + parseContext.FieldNumber, out headerKey))
+				var fieldNumber = parseContext.FieldNumberNames[parseContext.FieldNumber - 1];
+				if (parseContext.HeaderRow.TryGetValue(fieldNumber, out headerKey))
 				{
 					row.Add(headerKey, value);
 				}
@@ -279,7 +280,7 @@ namespace EtlGate.Core
 		private static bool ReadRecordSeparator(Dictionary<string, string> row, ParseContext parseContext)
 		{
 			AddFieldValue(row, parseContext);
-			parseContext.FieldNumber = 0;
+			parseContext.ResetFieldNumber();
 			parseContext.Handle = StartReadField;
 			if (parseContext.HasHeaderRow && parseContext.ReadingHeaderRow)
 			{
@@ -335,7 +336,7 @@ namespace EtlGate.Core
 		private static bool StartReadField(Token token, Dictionary<string, string> row, ParseContext parseContext)
 		{
 			parseContext.Capture = new StringBuilder();
-			parseContext.FieldNumber++;
+			parseContext.IncrementFieldNumber();
 			if (parseContext.SupportQuotedFields && token.TokenType == TokenType.Special && token.Value == "\"")
 			{
 				parseContext.ReadingQuotedField = true;
@@ -357,18 +358,40 @@ namespace EtlGate.Core
 
 		private class ParseContext
 		{
+			public ParseContext()
+			{
+				FieldNumberNames = new List<string>();
+			}
+
 			public StringBuilder Capture { get; set; }
-			public int FieldNumber { get; set; }
+			public int FieldNumber { get; private set; }
+			public List<string> FieldNumberNames { get; private set; }
 			public string FieldSeparator { get; set; }
 			public Func<Token, Dictionary<string, string>, ParseContext, bool> Handle { get; set; }
 			public bool HasHeaderRow { get; set; }
 			public Dictionary<string, string> HeaderRow { get; set; }
+			public int MaxFieldNumber { get; set; }
 			public bool ReadingHeaderRow { get; set; }
 			public bool ReadingQuotedField { get; set; }
 			public int RecordNumber { get; set; }
 			public string RecordSeparator { get; set; }
 			public int SeparatorLength { get; set; }
 			public bool SupportQuotedFields { get; set; }
+
+			public void IncrementFieldNumber()
+			{
+				FieldNumber++;
+				if (FieldNumber > MaxFieldNumber)
+				{
+					FieldNumberNames.Add("Field" + FieldNumber);
+					MaxFieldNumber = FieldNumber;
+				}
+			}
+
+			public void ResetFieldNumber()
+			{
+				FieldNumber = 0;
+			}
 		}
 	}
 }
