@@ -42,6 +42,8 @@ namespace EtlGate.Core
 				throw new ParseException("field separator and record separator must be different.");
 			}
 
+			var bufferedStream = new BufferedStream(stream, 131072);
+
 			var row = new Dictionary<string, string>();
 			var parseContext = new ParseContext
 				                   {
@@ -69,7 +71,7 @@ namespace EtlGate.Core
 				specialTokens.Add("\"");
 			}
 			var specialChars = (fieldSeparator + recordSeparator + (supportQuotedFields ? "\"" : "")).Distinct().ToArray();
-			foreach (var token in _streamTokenizer.Tokenize(stream, specialChars))
+			foreach (var token in _streamTokenizer.Tokenize(bufferedStream, specialChars))
 			{
 				var yieldIt = parseContext.Handle(token, row, parseContext);
 				if (yieldIt)
