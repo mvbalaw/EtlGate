@@ -5,7 +5,7 @@ namespace EtlGate.Core
 {
 	public interface ICsvReader
 	{
-		IEnumerable<Dictionary<string, string>> ReadFrom(Stream stream, string recordSeparator = "\r\n", bool hasHeaderRow = false);
+		IEnumerable<Record> ReadFrom(Stream stream, string recordSeparator = "\r\n", bool hasHeaderRow = false);
 	}
 
 	public class CsvReader : ICsvReader
@@ -17,7 +17,7 @@ namespace EtlGate.Core
 			_delimitedDataReader = delimitedDataReader;
 		}
 
-		public IEnumerable<Dictionary<string, string>> ReadFrom(Stream stream, string recordSeparator = "\r\n", bool hasHeaderRow = false)
+		public IEnumerable<Record> ReadFrom(Stream stream, string recordSeparator = "\r\n", bool hasHeaderRow = false)
 		{
 			return _delimitedDataReader.ReadFrom(stream, ",", recordSeparator, true, hasHeaderRow);
 		}

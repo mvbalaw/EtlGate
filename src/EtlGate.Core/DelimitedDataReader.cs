@@ -8,7 +8,7 @@ namespace EtlGate.Core
 {
 	public interface IDelimitedDataReader
 	{
-		IEnumerable<Dictionary<string, string>> ReadFrom(Stream stream, string fieldSeparator = ",", string recordSeparator = "\r\n", bool supportQuotedFields = true, bool hasHeaderRow = false);
+		IEnumerable<Record> ReadFrom(Stream stream, string fieldSeparator = ",", string recordSeparator = "\r\n", bool supportQuotedFields = true, bool hasHeaderRow = false);
 	}
 
 	public class DelimitedDataReader : IDelimitedDataReader
@@ -20,7 +20,7 @@ namespace EtlGate.Core
 			_streamTokenizer = streamTokenizer;
 		}
 
-		public IEnumerable<Dictionary<string, string>> ReadFrom(Stream stream, string fieldSeparator = ",", string recordSeparator = "\r\n", bool supportQuotedFields = true, bool hasHeaderRow = false)
+		public IEnumerable<Record> ReadFrom(Stream stream, string fieldSeparator = ",", string recordSeparator = "\r\n", bool supportQuotedFields = true, bool hasHeaderRow = false)
 		{
 			if (stream == null)
 			{
@@ -44,10 +44,10 @@ namespace EtlGate.Core
 
 			var bufferedStream = new BufferedStream(stream, 131072);
 
-			var row = new Dictionary<string, string>();
+			var fieldValues = new List<string>();
 			var parseContext = new ParseContext
 				                   {
-					                   HeaderRow = new Dictionary<string, string>(),
+					                   HeaderRowFieldIndexes = new Dictionary<string, int>(),
 					                   HasHeaderRow = hasHeaderRow,
 					                   RecordSeparator = recordSeparator,
 					                   FieldSeparator = fieldSeparator,
@@ -73,11 +73,11 @@ namespace EtlGate.Core
 			var specialChars = (fieldSeparator + recordSeparator + (supportQuotedFields ? "\"" : "")).Distinct().ToArray();
 			foreach (var token in _streamTokenizer.Tokenize(bufferedStream, specialChars))
 			{
-				var yieldIt = parseContext.Handle(token, row, parseContext);
+				var yieldIt = parseContext.Handle(token, fieldValues, parseContext);
 				if (yieldIt)
 				{
-					yield return row;
-					row = new Dictionary<string, string>();
+					yield return new Record(fieldValues, parseContext.HeaderRowFieldIndexes);
+					fieldValues = new List<string>();
 					parseContext.Capture.Clear();
 				}
 			}
@@ -97,37 +97,22 @@ namespace EtlGate.Core
 				{
 					parseContext.IncrementFieldNumber();
 				}
-				AddFieldValue(row, parseContext);
+				AddFieldValue(fieldValues, parseContext);
 			}
-			if (row.Count > 0)
+			if (fieldValues.Count > 0)
 			{
-				yield return row;
+				yield return new Record(fieldValues, parseContext.HeaderRowFieldIndexes);
 			}
 		}
 
-		private static void AddFieldValue(Dictionary<string, string> row, ParseContext parseContext)
-		{
-			var key = parseContext.FieldNumberNames[parseContext.FieldNumber - 1];
-			AddFieldValue(row, parseContext, key);
-		}
-
-		private static void AddFieldValue(Dictionary<string, string> row, ParseContext parseContext, string key)
+		private static void AddFieldValue(ICollection<string> fieldValues, ParseContext parseContext)
 		{
 			var value = parseContext.Capture.ToString();
-			row.Add(key, value);
-			if (parseContext.HasHeaderRow && parseContext.HeaderRow != null)
-			{
-				string headerKey;
-				var fieldNumber = parseContext.FieldNumberNames[parseContext.FieldNumber - 1];
-				if (parseContext.HeaderRow.TryGetValue(fieldNumber, out headerKey))
-				{
-					row.Add(headerKey, value);
-				}
-			}
+			fieldValues.Add(value);
 			parseContext.Capture.Clear();
 		}
 
-		private static bool ContinueCollectSeparator(Token token, Dictionary<string, string> row, ParseContext parseContext)
+		private static bool ContinueCollectSeparator(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			parseContext.Capture.Append(token.Value);
 			var capture = parseContext.Capture.ToString();
@@ -143,12 +128,12 @@ namespace EtlGate.Core
 						parseContext.Capture.Clear();
 						parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + fieldSeparatorIndex));
 						token.Value = parseContext.FieldSeparator;
-						return ReadFieldSeparator(row, parseContext);
+						return ReadFieldSeparator(fieldValues, parseContext);
 					}
 					parseContext.Capture.Clear();
 					parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + recordSeparatorIndex));
 					token.Value = parseContext.RecordSeparator;
-					return ReadRecordSeparator(row, parseContext);
+					return ReadRecordSeparator(fieldValues, parseContext);
 				}
 				if (fieldSeparatorIndex != -1 && fieldSeparatorIndex < recordSeparatorIndex || recordSeparatorIndex == -1)
 				{
@@ -160,7 +145,7 @@ namespace EtlGate.Core
 					parseContext.Capture.Clear();
 					parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + fieldSeparatorIndex));
 					token.Value = parseContext.FieldSeparator;
-					return ReadFieldSeparator(row, parseContext);
+					return ReadFieldSeparator(fieldValues, parseContext);
 				}
 				if (recordSeparatorIndex != -1)
 				{
@@ -176,7 +161,7 @@ namespace EtlGate.Core
 						parseContext.Capture.Clear();
 						parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + recordSeparatorIndex));
 						token.Value = parseContext.RecordSeparator;
-						var toReturn = ReadRecordSeparator(row, parseContext);
+						var toReturn = ReadRecordSeparator(fieldValues, parseContext);
 						var remainder = capture.Substring(recordSeparatorIndex + parseContext.RecordSeparator.Length);
 						if (remainder.Length > 0)
 						{
@@ -210,7 +195,7 @@ namespace EtlGate.Core
 			return false;
 		}
 
-		private static bool ReadEscapedQuoteOrEndQuotedField(Token token, Dictionary<string, string> row, ParseContext parseContext)
+		private static bool ReadEscapedQuoteOrEndQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			switch (token.TokenType)
 			{
@@ -230,7 +215,7 @@ namespace EtlGate.Core
 								// possible end of field, more fields follow
 								if (token.Value[0] == parseContext.FieldSeparator[0])
 								{
-									return StartCollectingSeparator(token, row, parseContext);
+									return StartCollectingSeparator(token, fieldValues, parseContext);
 								}
 							}
 							if (parseContext.RecordSeparator.Length > 0)
@@ -238,7 +223,7 @@ namespace EtlGate.Core
 								// possible end of field, more fields follow
 								if (token.Value[0] == parseContext.RecordSeparator[0])
 								{
-									return StartCollectingSeparator(token, row, parseContext);
+									return StartCollectingSeparator(token, fieldValues, parseContext);
 								}
 							}
 
@@ -250,14 +235,14 @@ namespace EtlGate.Core
 			return false;
 		}
 
-		private static bool ReadFieldSeparator(Dictionary<string, string> row, ParseContext parseContext)
+		private static bool ReadFieldSeparator(ICollection<string> fieldValues, ParseContext parseContext)
 		{
-			AddFieldValue(row, parseContext);
+			AddFieldValue(fieldValues, parseContext);
 			parseContext.Handle = StartReadField;
 			return false;
 		}
 
-		private static bool ReadQuotedField(Token token, Dictionary<string, string> row, ParseContext parseContext)
+		private static bool ReadQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			switch (token.TokenType)
 			{
@@ -279,37 +264,42 @@ namespace EtlGate.Core
 			return false;
 		}
 
-		private static bool ReadRecordSeparator(Dictionary<string, string> row, ParseContext parseContext)
+		private static bool ReadRecordSeparator(IList<string> fieldValues, ParseContext parseContext)
 		{
-			AddFieldValue(row, parseContext);
+			AddFieldValue(fieldValues, parseContext);
 			parseContext.ResetFieldNumber();
 			parseContext.Handle = StartReadField;
 			if (parseContext.HasHeaderRow && parseContext.ReadingHeaderRow)
 			{
 				parseContext.ReadingHeaderRow = false;
-				parseContext.HeaderRow = new Dictionary<string, string>(row);
-				CheckHeaderRowForDuplicateFieldNames(row);
-				row.Clear();
+				var headerRowFieldIndexes = new Dictionary<string, int>();
+				for (int i = 0; i < fieldValues.Count; i++)
+				{
+					var key = fieldValues[i];
+					headerRowFieldIndexes[key] = i;
+				}
+				parseContext.HeaderRowFieldIndexes = headerRowFieldIndexes;
+				CheckHeaderRowForDuplicateFieldNames(fieldValues);
+				fieldValues.Clear();
 				return false;
 			}
 			parseContext.RecordNumber++;
 			return true;
 		}
 
-		private static void CheckHeaderRowForDuplicateFieldNames(Dictionary<string, string> row)
+		private static void CheckHeaderRowForDuplicateFieldNames(IEnumerable<string> fieldValues)
 		{
-			var reverseLookup = new Dictionary<string, string>();
-			foreach (var field in row)
+			var uniqueHeaderLookup = new HashSet<string>();
+			foreach (var field in fieldValues)
 			{
-				if (reverseLookup.ContainsKey(field.Value))
+				if (!uniqueHeaderLookup.Add(field))
 				{
-					throw new ParseException(String.Format("Header row must not have more than one field with the same name. '{0}' appears more than once in the header row.", field.Value));
+					throw new ParseException(String.Format("Header row must not have more than one field with the same name. '{0}' appears more than once in the header row.", field));
 				}
-				reverseLookup.Add(field.Value, field.Key);
 			}
 		}
 
-		private static bool ReadUnquotedField(Token token, Dictionary<string, string> row, ParseContext parseContext)
+		private static bool ReadUnquotedField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			switch (token.TokenType)
 			{
@@ -320,7 +310,7 @@ namespace EtlGate.Core
 					if (parseContext.FieldSeparator.Length > 0 && token.Value[0] == parseContext.FieldSeparator[0] ||
 					    parseContext.RecordSeparator.Length > 0 && token.Value[0] == parseContext.RecordSeparator[0])
 					{
-						return StartCollectingSeparator(token, row, parseContext);
+						return StartCollectingSeparator(token, fieldValues, parseContext);
 					}
 					parseContext.Capture.Append(token.Value);
 					break;
@@ -328,14 +318,14 @@ namespace EtlGate.Core
 			return false;
 		}
 
-		private static bool StartCollectingSeparator(Token token, Dictionary<string, string> row, ParseContext parseContext)
+		private static bool StartCollectingSeparator(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			parseContext.SeparatorLength = 1;
 			parseContext.Handle = ContinueCollectSeparator;
-			return ContinueCollectSeparator(token, row, parseContext);
+			return ContinueCollectSeparator(token, fieldValues, parseContext);
 		}
 
-		private static bool StartReadField(Token token, Dictionary<string, string> row, ParseContext parseContext)
+		private static bool StartReadField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			parseContext.Capture = new StringBuilder();
 			parseContext.IncrementFieldNumber();
@@ -348,7 +338,7 @@ namespace EtlGate.Core
 			{
 				parseContext.ReadingQuotedField = false;
 				parseContext.Handle = ReadUnquotedField;
-				return ReadUnquotedField(token, row, parseContext);
+				return ReadUnquotedField(token, fieldValues, parseContext);
 			}
 			return false;
 		}
@@ -360,19 +350,12 @@ namespace EtlGate.Core
 
 		private class ParseContext
 		{
-			public ParseContext()
-			{
-				FieldNumberNames = new List<string>();
-			}
-
 			public StringBuilder Capture { get; set; }
 			public int FieldNumber { get; private set; }
-			public List<string> FieldNumberNames { get; private set; }
 			public string FieldSeparator { get; set; }
-			public Func<Token, Dictionary<string, string>, ParseContext, bool> Handle { get; set; }
+			public Func<Token, List<string>, ParseContext, bool> Handle { get; set; }
 			public bool HasHeaderRow { get; set; }
-			public Dictionary<string, string> HeaderRow { get; set; }
-			public int MaxFieldNumber { get; set; }
+			public Dictionary<string, int> HeaderRowFieldIndexes { get; set; }
 			public bool ReadingHeaderRow { get; set; }
 			public bool ReadingQuotedField { get; set; }
 			public int RecordNumber { get; set; }
@@ -383,11 +366,6 @@ namespace EtlGate.Core
 			public void IncrementFieldNumber()
 			{
 				FieldNumber++;
-				if (FieldNumber > MaxFieldNumber)
-				{
-					FieldNumberNames.Add("Field" + FieldNumber);
-					MaxFieldNumber = FieldNumber;
-				}
 			}
 
 			public void ResetFieldNumber()

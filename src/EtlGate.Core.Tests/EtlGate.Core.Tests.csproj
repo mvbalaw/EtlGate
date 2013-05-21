@@ -40,6 +40,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RecordTests.cs" />
     <Compile Include="StreamTokenizerTests.cs" />
     <Compile Include="TokenMergerTests.cs" />
   </ItemGroup>

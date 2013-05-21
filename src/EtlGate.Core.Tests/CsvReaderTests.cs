@@ -46,11 +46,7 @@ namespace EtlGate.Core.Tests
 					{
 						rows.RemoveAt(rows.Count - 1);
 					}
-					var expect = rows.Select(x => x.Select((y, inx) => new
-						                                                   {
-							                                                   Value = y,
-							                                                   Key = "Field" + (inx + 1)
-						                                                   }).ToDictionary(y => y.Key, z => z.Value.Value)).ToArray();
+					var expect = rows.Select(x => new Record(x.Select(y => y.Value).ToArray())).ToArray();
 					var expectUnclosedQuoteException = rows.Where(x => x.Any(y => y.IsQuoted && y.ErrorMissingTrailingQuote)).ToList();
 					var expectUnescapedQuotedException = rows.Where(x => x.Any(y => y.IsQuoted && y.ErrorUnescapedQuote)).ToList();
 					try
@@ -89,11 +85,10 @@ namespace EtlGate.Core.Tests
 				const string input = ",b";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "" },
-								             { "Field2", "b" }
-							             }
+						             new Record(
+							             "",
+							             "b"
+							             )
 					             });
 			}
 
@@ -103,7 +98,7 @@ namespace EtlGate.Core.Tests
 				const string input = "\n";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>()
+						             new Record()
 					             }, input);
 			}
 
@@ -112,7 +107,7 @@ namespace EtlGate.Core.Tests
 			public void Given_a_stream_containing__QUOTE_COMMA_RETURN_QUOTE_RETURN_a__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\",\r\"\ra";
-				Check(input, new Dictionary<string, string>[] { });
+				Check(input, new Record[] { });
 			}
 
 			[Test]
@@ -120,7 +115,7 @@ namespace EtlGate.Core.Tests
 			public void Given_a_stream_containing__QUOTE_COMMA_a__should_throw_a_parse_exception_due_to_unclosed_quote()
 			{
 				const string input = "\",a";
-				Check(input, new Dictionary<string, string>[] { });
+				Check(input, new Record[] { });
 			}
 
 			[Test]
@@ -129,11 +124,10 @@ namespace EtlGate.Core.Tests
 				const string input = "\"\",b";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "" },
-								             { "Field2", "b" }
-							             }
+						             new Record(
+							             "",
+							             "b"
+							             )
 					             });
 			}
 
@@ -142,7 +136,7 @@ namespace EtlGate.Core.Tests
 			public void Given_a_stream_containing__QUOTE_QUOTE_RETURN_QUOTE__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"\"\r\"";
-				Check(input, new Dictionary<string, string>[] { });
+				Check(input, new Record[] { });
 			}
 
 			[Test]
@@ -150,7 +144,20 @@ namespace EtlGate.Core.Tests
 			public void Given_a_stream_containing__QUOTE_QUOTE_a__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"\"a\",c";
-				Check(input, new Dictionary<string, string>[] { });
+				Check(input, new Record[] { });
+			}
+
+			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
+			public void Given_a_stream_containing__QUOTE_RETURN_NEWLINE_QUOTE_RETURN__should_throw_a_parse_exception_due_to_unescaped_quote()
+			{
+				const string input = "\"\r\n\"\r";
+				Check(input, new[]
+					             {
+						             new Record(
+							             "\r\n\"\r"
+							             )
+					             });
 			}
 
 			[Test]
@@ -159,51 +166,10 @@ namespace EtlGate.Core.Tests
 				const string input = "\"a,b\",c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a,b" },
-								             { "Field2", "c" }
-							             }
-					             });
-			}
-			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
-			public void Given_a_stream_containing__QUOTE_RETURN_NEWLINE_QUOTE_RETURN__should_throw_a_parse_exception_due_to_unescaped_quote()
-			{
-				const string input = "\"\r\n\"\r";
-				Check(input, new[]
-					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "\r\n\"\r" }
-							             }
-					             });
-			}
-			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
-			public void Given_a_stream_containing__QUOTE_a_QUOTE_RETURN_RETURN_NEWLINE_a_COMMA_aa__should_throw_a_parse_exception_due_to_unescaped_quote()
-			{
-				const string input = "\"a\"\r\r\na,aa";
-				Check(input, new[]
-					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a\"\r\r\na,aa" }
-							             }
-					             });
-			}
-			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
-			public void Given_a_stream_containing__x__should_throw_a_parse_exception_due_to_unescaped_quote()
-			{
-				//",,"RETURN,,aaa
-				const string input = "\",,\"\r,,aaa";
-				Check(input, new[]
-					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", ",," }
-							             }
+						             new Record(
+							             "a,b",
+							             "c"
+							             )
 					             });
 			}
 
@@ -213,11 +179,23 @@ namespace EtlGate.Core.Tests
 				const string input = "\"a\"\"b\",c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a\"b" },
-								             { "Field2", "c" }
-							             }
+						             new Record(
+							             "a\"b",
+							             "c"
+							             )
+					             });
+			}
+
+			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
+			public void Given_a_stream_containing__QUOTE_a_QUOTE_RETURN_RETURN_NEWLINE_a_COMMA_aa__should_throw_a_parse_exception_due_to_unescaped_quote()
+			{
+				const string input = "\"a\"\r\r\na,aa";
+				Check(input, new[]
+					             {
+						             new Record(
+							             "a\"\r\r\na,aa"
+							             )
 					             });
 			}
 
@@ -227,11 +205,10 @@ namespace EtlGate.Core.Tests
 				const string input = "\"a\r\nb\",c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a\r\nb" },
-								             { "Field2", "c" }
-							             }
+						             new Record(
+							             "a\r\nb"
+							             , "c"
+							             )
 					             });
 			}
 
@@ -241,11 +218,10 @@ namespace EtlGate.Core.Tests
 				const string input = "\"ab\",c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "ab" },
-								             { "Field2", "c" }
-							             }
+						             new Record(
+							             "ab",
+							             "c"
+							             )
 					             });
 			}
 
@@ -255,7 +231,7 @@ namespace EtlGate.Core.Tests
 				const string input = "\r\n";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>()
+						             new Record()
 					             });
 			}
 
@@ -265,10 +241,9 @@ namespace EtlGate.Core.Tests
 				const string input = "\r";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "\r" }
-							             }
+						             new Record(
+							             "\r"
+							             )
 					             }, "\n");
 			}
 
@@ -278,10 +253,9 @@ namespace EtlGate.Core.Tests
 				const string input = "\r";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "\r" }
-							             }
+						             new Record(
+							             "\r"
+							             )
 					             });
 			}
 
@@ -291,11 +265,10 @@ namespace EtlGate.Core.Tests
 				const string input = "\ra\"ca\"\r,bc";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "\ra\"ca\"\r" },
-								             { "Field2", "bc" }
-							             }
+						             new Record(
+							             "\ra\"ca\"\r",
+							             "bc"
+							             )
 					             });
 			}
 
@@ -305,12 +278,11 @@ namespace EtlGate.Core.Tests
 				const string input = "a,,c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "" },
-								             { "Field3", "c" }
-							             }
+						             new Record(
+							             "a",
+							             "",
+							             "c"
+							             )
 					             });
 			}
 
@@ -320,12 +292,10 @@ namespace EtlGate.Core.Tests
 				const string input = "a,\"\",c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "" },
-								             { "Field3", "c" }
-							             }
+						             new Record("a",
+						                        "",
+						                        "c"
+							             )
 					             });
 			}
 
@@ -335,11 +305,10 @@ namespace EtlGate.Core.Tests
 				const string input = "a,\"\"";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "" }
-							             }
+						             new Record(
+							             "a",
+							             ""
+							             )
 					             });
 			}
 
@@ -349,16 +318,13 @@ namespace EtlGate.Core.Tests
 				const string input = "a,\"b\"\r\nc,\"d\"\r\n";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "b" }
-							             },
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(
+							             "a",
+							             "b"),
+						             new Record(
+							             "c",
+							             "d"
+							             )
 					             });
 			}
 
@@ -368,11 +334,10 @@ namespace EtlGate.Core.Tests
 				const string input = "a,";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "" }
-							             }
+						             new Record(
+							             "a",
+							             ""
+							             )
 					             });
 			}
 
@@ -382,16 +347,13 @@ namespace EtlGate.Core.Tests
 				const string input = "a,b\r\nc,\"d\"";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "b" }
-							             },
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(
+							             "a",
+							             "b"),
+						             new Record(
+							             "c",
+							             "d"
+							             )
 					             });
 			}
 
@@ -401,16 +363,14 @@ namespace EtlGate.Core.Tests
 				const string input = "a,b\r\nc,d\r\n";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "b" }
-							             },
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(
+							             "a",
+							             "b"
+							             ),
+						             new Record(
+							             "c",
+							             "d"
+							             )
 					             });
 			}
 
@@ -420,11 +380,10 @@ namespace EtlGate.Core.Tests
 				const string input = "a,b";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a" },
-								             { "Field2", "b" }
-							             }
+						             new Record(
+							             "a",
+							             "b"
+							             )
 					             });
 			}
 
@@ -434,11 +393,10 @@ namespace EtlGate.Core.Tests
 				const string input = "a\"\"b,c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a\"\"b" },
-								             { "Field2", "c" }
-							             }
+						             new Record(
+							             "a\"\"b",
+							             "c"
+							             )
 					             });
 			}
 
@@ -448,11 +406,24 @@ namespace EtlGate.Core.Tests
 				const string input = "a\"b,c";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "a\"b" },
-								             { "Field2", "c" }
-							             }
+						             new Record(
+							             "a\"b",
+							             "c"
+							             )
+					             });
+			}
+
+			[Test]
+			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
+			public void Given_a_stream_containing__x__should_throw_a_parse_exception_due_to_unescaped_quote()
+			{
+				//",,"RETURN,,aaa
+				const string input = "\",,\"\r,,aaa";
+				Check(input, new[]
+					             {
+						             new Record(
+							             ",,"
+							             )
 					             });
 			}
 
@@ -462,13 +433,16 @@ namespace EtlGate.Core.Tests
 				const string input = "A,B\r\nc,d";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "A", "c" },
-								             { "B", "d" },
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(new[]
+							                        {
+								                        "c",
+								                        "d"
+							                        },
+						                        new Dictionary<string, int>
+							                        {
+								                        { "A", 0 },
+								                        { "B", 1 }
+							                        })
 					             }, hasHeaderRow:true);
 			}
 
@@ -478,11 +452,14 @@ namespace EtlGate.Core.Tests
 				const string input = "A,B\r\nc";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "A", "c" },
-								             { "Field1", "c" }
-							             }
+						             new Record(new[]
+							                        {
+								                        "c"
+							                        },
+						                        new Dictionary<string, int>
+							                        {
+								                        { "A", 0 }
+							                        })
 					             }, hasHeaderRow:true);
 			}
 
@@ -492,12 +469,15 @@ namespace EtlGate.Core.Tests
 				const string input = "A\r\nc,d";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "A", "c" },
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(new[]
+							                        {
+								                        "c",
+								                        "d"
+							                        },
+						                        new Dictionary<string, int>
+							                        {
+								                        { "A", 0 }
+							                        })
 					             }, hasHeaderRow:true);
 			}
 
@@ -507,13 +487,15 @@ namespace EtlGate.Core.Tests
 				const string input = "\"A\",B\r\nc,d";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "A", "c" },
-								             { "B", "d" },
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(new[]
+							                        {
+								                        "c",
+								                        "d"
+							                        }, new Dictionary<string, int>
+								                           {
+									                           { "A", 0 },
+									                           { "B", 1 }
+								                           })
 					             }, hasHeaderRow:true);
 			}
 
@@ -523,13 +505,15 @@ namespace EtlGate.Core.Tests
 				const string input = "\"A B\",C\r\nc,d";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "A B", "c" },
-								             { "C", "d" },
-								             { "Field1", "c" },
-								             { "Field2", "d" }
-							             }
+						             new Record(new[]
+							                        {
+								                        "c",
+								                        "d"
+							                        }, new Dictionary<string, int>
+								                           {
+									                           { "A B", 0 },
+									                           { "C", 1 }
+								                           })
 					             }, hasHeaderRow:true);
 			}
 
@@ -537,7 +521,7 @@ namespace EtlGate.Core.Tests
 			public void Given_an_empty_stream__should_return_an_empty_result()
 			{
 				const string input = "";
-				Check(input, new Dictionary<string, string>[] { });
+				Check(input, new Record[] { });
 			}
 
 			[Test]
@@ -546,10 +530,9 @@ namespace EtlGate.Core.Tests
 				const string input = "\r";
 				Check(input, new[]
 					             {
-						             new Dictionary<string, string>
-							             {
-								             { "Field1", "\r" }
-							             }
+						             new Record(
+							             "\r"
+							             )
 					             }, null);
 			}
 
@@ -700,30 +683,43 @@ namespace EtlGate.Core.Tests
 				items[0].Value.ShouldBeEqualTo("\r");
 			}
 
-			private void Check(string input, IList<Dictionary<string, string>> expect, string recordSeparator = "\r\n", bool hasHeaderRow = false)
+			private void Check(string input, IList<Record> expect, string recordSeparator = "\r\n", bool hasHeaderRow = false)
 			{
 				var stream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _reader.ReadFrom(stream, recordSeparator, hasHeaderRow).ToList();
 				result.Count.ShouldBeEqualTo(expect.Count);
 				for (var rowNumber = 0; rowNumber < expect.Count; rowNumber++)
 				{
-					var actualRow = result[rowNumber];
-					var expectedRow = expect[rowNumber];
-					foreach (var field in expectedRow)
+					var actualRecord = result[rowNumber];
+					var expectedRecord = expect[rowNumber];
+					for (var fieldIndex = 0; fieldIndex < expectedRecord.FieldCount; fieldIndex++)
 					{
-						string actualValue;
-						if (!actualRow.TryGetValue(field.Key, out actualValue))
+						if (!actualRecord.HasField(fieldIndex))
 						{
-							Assert.Fail("Row " + (1 + rowNumber) + " does not contain field named " + field.Key);
+							Assert.Fail("Row " + (1 + rowNumber) + " does not contain field with index " + fieldIndex);
 						}
-						else
+						var actualValue = actualRecord.GetField(fieldIndex);
+						var expectedValue = expectedRecord.GetField(fieldIndex);
+						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + rowNumber) + " field " + fieldIndex + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
+					}
+
+					foreach (var headingFieldName in expectedRecord.HeadingFieldNames)
+					{
+						if (!actualRecord.HasField(headingFieldName))
 						{
-							actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+							Assert.Fail("Row " + (1 + rowNumber) + " does not contain field named " + headingFieldName);
 						}
-						var expectedValue = field.Value.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
-						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + rowNumber) + " " + field.Key + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
+						var actualValue = actualRecord.GetField(headingFieldName);
+						var expectedValue = expectedRecord.GetField(headingFieldName);
+						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + rowNumber) + " " + headingFieldName + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}
 				}
+
+
 			}
 
 			private class Field

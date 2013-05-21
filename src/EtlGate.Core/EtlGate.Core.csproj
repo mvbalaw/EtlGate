@@ -43,6 +43,7 @@
     </Compile>
     <Compile Include="ParseException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Record.cs" />
     <Compile Include="StreamTokenizer.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenMerger.cs" />
