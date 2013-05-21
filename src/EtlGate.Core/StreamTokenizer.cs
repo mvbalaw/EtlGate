@@ -26,7 +26,11 @@ namespace EtlGate.Core
 				throw new ArgumentException(ErrorSpecialCharactersMustBeSpecified, "specials");
 			}
 
-			var specialsHash = new HashSet<char>(specials);
+			var lookup = new bool[char.MaxValue];
+			foreach (var ch in specials)
+			{
+				lookup[ch] = true;
+			}
 
 			var data = new StringBuilder();
 			using (var reader = new StreamReader(stream))
@@ -41,7 +45,7 @@ namespace EtlGate.Core
 						break;
 					}
 
-					if (!specialsHash.Contains(next[0]))
+					if (!lookup[next[0]])
 					{
 						data.Append(next[0]);
 						continue;
