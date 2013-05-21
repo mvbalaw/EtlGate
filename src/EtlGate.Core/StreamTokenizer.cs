@@ -14,6 +14,7 @@ namespace EtlGate.Core
 	{
 		public const string ErrorSpecialCharactersMustBeSpecified = "Special characters must be specified.";
 		public const string ErrorStreamCannotBeNull = "Stream cannot be null.";
+		private const int ReadBufferSize = 4096;
 
 		public IEnumerable<Token> Tokenize(Stream stream, params char[] specials)
 		{
@@ -35,28 +36,32 @@ namespace EtlGate.Core
 			var data = new StringBuilder();
 			using (var reader = new StreamReader(stream))
 			{
-				var next = new char[1];
+				var next = new char[ReadBufferSize];
 				int count;
 				do
 				{
-					count = reader.Read(next, 0, 1);
+					count = reader.Read(next, 0, ReadBufferSize);
 					if (count == 0)
 					{
 						break;
 					}
 
-					if (!lookup[next[0]])
+					for (var i = 0; i < count; i++)
 					{
-						data.Append(next[0]);
-						continue;
-					}
+						var ch = next[i];
+						if (!lookup[ch])
+						{
+							data.Append(ch);
+							continue;
+						}
 
-					if (data.Length > 0)
-					{
-						yield return new Token(TokenType.Data, data.ToString());
-						data.Length = 0;
+						if (data.Length > 0)
+						{
+							yield return new Token(TokenType.Data, data.ToString());
+							data.Length = 0;
+						}
+						yield return new Token(TokenType.Special, new String(next, i, 1));
 					}
-					yield return new Token(TokenType.Special, new String(next));
 				} while (count > 0);
 			}
 
