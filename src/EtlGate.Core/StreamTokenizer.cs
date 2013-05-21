@@ -63,6 +63,7 @@ namespace EtlGate.Core
 			if (data.Length > 0)
 			{
 				yield return new Token(TokenType.Data, data.ToString());
+				data.Length = 0;
 			}
 		}
 	}
