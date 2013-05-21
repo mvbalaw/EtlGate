@@ -49,28 +49,16 @@ namespace EtlGate.Core
 
 					if (data.Length > 0)
 					{
-						yield return new Token
-							             {
-								             TokenType = TokenType.Data,
-								             Value = data.ToString()
-							             };
-						data = new StringBuilder();
+						yield return new Token(TokenType.Data, data.ToString());
+						data.Length = 0;
 					}
-					yield return new Token
-						             {
-							             TokenType = TokenType.Special,
-							             Value = new String(next)
-						             };
+					yield return new Token(TokenType.Special, new String(next));
 				} while (count > 0);
 			}
 
 			if (data.Length > 0)
 			{
-				yield return new Token
-					             {
-						             TokenType = TokenType.Data,
-						             Value = data.ToString()
-					             };
+				yield return new Token(TokenType.Data, data.ToString());
 			}
 		}
 	}

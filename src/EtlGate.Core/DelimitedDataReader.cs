@@ -127,12 +127,10 @@ namespace EtlGate.Core
 					{
 						parseContext.Capture.Clear();
 						parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + fieldSeparatorIndex));
-						token.Value = parseContext.FieldSeparator;
 						return ReadFieldSeparator(fieldValues, parseContext);
 					}
 					parseContext.Capture.Clear();
 					parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + recordSeparatorIndex));
-					token.Value = parseContext.RecordSeparator;
 					return ReadRecordSeparator(fieldValues, parseContext);
 				}
 				if (fieldSeparatorIndex != -1 && fieldSeparatorIndex < recordSeparatorIndex || recordSeparatorIndex == -1)
@@ -144,7 +142,6 @@ namespace EtlGate.Core
 					}
 					parseContext.Capture.Clear();
 					parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + fieldSeparatorIndex));
-					token.Value = parseContext.FieldSeparator;
 					return ReadFieldSeparator(fieldValues, parseContext);
 				}
 				if (recordSeparatorIndex != -1)
@@ -160,7 +157,6 @@ namespace EtlGate.Core
 						}
 						parseContext.Capture.Clear();
 						parseContext.Capture.Append(capture.Substring(0, capture.Length - potentialSeparator.Length + recordSeparatorIndex));
-						token.Value = parseContext.RecordSeparator;
 						var toReturn = ReadRecordSeparator(fieldValues, parseContext);
 						var remainder = capture.Substring(recordSeparatorIndex + parseContext.RecordSeparator.Length);
 						if (remainder.Length > 0)

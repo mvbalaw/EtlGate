@@ -68,11 +68,7 @@ namespace EtlGate.Core
 			}
 			if (mergeContext.Data.Length > 0)
 			{
-				yield return new Token
-					             {
-						             TokenType = TokenType.Data,
-						             Value = mergeContext.Data
-					             };
+				yield return new Token(TokenType.Data, mergeContext.Data);
 			}
 		}
 
@@ -103,31 +99,16 @@ namespace EtlGate.Core
 
 			if (mergeContext.SpecialIndex == (mergeContext.Special.Length - 1))
 			{
-//				var match = mergeContext.SpecialTokensByLengthAscending
-//				                        .Where(x => x.Length > mergeContext.Special.Length)
-//				                        .FirstOrDefault(x => x.StartsWith(mergeContext.Special));
-//				if (match != null)
-//				{
-//					mergeContext.Special = match;
-//				}
-//				else
+				if (mergeContext.Data.Length > 0)
 				{
-					if (mergeContext.Data.Length > 0)
-					{
-						yield return new Token
-							             {
-								             TokenType = TokenType.Data,
-								             Value = mergeContext.Data
-							             };
-						mergeContext.Data = "";
-					}
-
-					// reached end and no alternate, so special
-					token.Value = mergeContext.Special;
-					yield return token;
-					mergeContext.CheckingSpecial = false;
-					yield break;
+					yield return new Token(TokenType.Data, mergeContext.Data);
+					mergeContext.Data = "";
 				}
+
+				// reached end and no alternate, so special
+				yield return new Token(token.TokenType, mergeContext.Special);
+				mergeContext.CheckingSpecial = false;
+				yield break;
 			}
 
 			mergeContext.SpecialIndex++;
@@ -156,20 +137,12 @@ namespace EtlGate.Core
 				{
 					if (mergeContext.Data.Length > 0)
 					{
-						yield return new Token
-							             {
-								             TokenType = TokenType.Data,
-								             Value = mergeContext.Data
-							             };
+						yield return new Token(TokenType.Data, mergeContext.Data);
 						mergeContext.Data = "";
 					}
 
 					// there is only a shorter special, use it
-					yield return new Token
-						             {
-							             TokenType = TokenType.Special,
-							             Value = shorter
-						             };
+					yield return new Token(TokenType.Special, shorter);
 
 					input = input.Substring(shorter.Length);
 					shorter = mergeContext.SpecialTokensByLengthAscending

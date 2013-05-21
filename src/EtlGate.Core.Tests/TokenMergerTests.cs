@@ -10,9 +10,9 @@ using NUnit.Framework;
 
 namespace EtlGate.Core.Tests
 {
-// ReSharper disable ClassNeverInstantiated.Global
+	// ReSharper disable ClassNeverInstantiated.Global
 	public class TokenMergerTests
-// ReSharper restore ClassNeverInstantiated.Global
+	// ReSharper restore ClassNeverInstantiated.Global
 	{
 		[TestFixture]
 		public class When_asked_to_merge_tokens
@@ -68,21 +68,9 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "a" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               }
+						               new Token(TokenType.Special,"a"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Special, "a")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -94,16 +82,8 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "aa", "ab" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "aa"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "a"
-							               }
+						               new Token(TokenType.Special, "aa"),
+						               new Token(TokenType.Data, "a")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -115,16 +95,8 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "aa" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "aa"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "a"
-							               }
+						               new Token(TokenType.Special, "aa"),
+						               new Token(TokenType.Data, "a")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -136,26 +108,10 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "a", "aba", "ababc" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "bc"
-							               }
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Data, "b"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Data, "bc")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -167,21 +123,9 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "aa", "ab", "abc" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "ab"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "ab"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "c"
-							               }
+						               new Token(TokenType.Special, "ab"),
+						               new Token(TokenType.Special, "ab"),
+						               new Token(TokenType.Data, "c")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -193,21 +137,9 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "beab", "a", "eaec", "b" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "e"
-							               }
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Special, "b"),
+						               new Token(TokenType.Data, "e")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -220,21 +152,9 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "b", "babe", "a" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "c"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               }
+						               new Token(TokenType.Special, "b"),
+						               new Token(TokenType.Data, "c"),
+						               new Token(TokenType.Special, "a")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -246,26 +166,10 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "bc", "d", "dd", "bdbc" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "c"
-							               }
+						               new Token(TokenType.Data, "b"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Data, "c")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -278,21 +182,9 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "eab", "eb", "bbe", "eaad" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "eab"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "eedaed"
-							               }
+						               new Token(TokenType.Data, "b"),
+						               new Token(TokenType.Special, "eab"),
+						               new Token(TokenType.Data, "eedaed")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -305,26 +197,10 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "bb", "e", "ea" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               }
+						               new Token(TokenType.Data, "b"),
+						               new Token(TokenType.Special, "e"),
+						               new Token(TokenType.Data, "a"),
+						               new Token(TokenType.Special, "e")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -337,41 +213,13 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "d", "cb", "a", "bdc" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "c"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "bb"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "bdc"
-							               }
+						               new Token(TokenType.Data, "c"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Data, "b"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Data, "bb"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Special, "bdc")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -384,31 +232,11 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "acdc", "e" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "cdb"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "baba"
-							               }
+						               new Token(TokenType.Data, "cdb"),
+						               new Token(TokenType.Special, "e"),
+						               new Token(TokenType.Data, "a"),
+						               new Token(TokenType.Special, "e"),
+						               new Token(TokenType.Data, "baba")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -421,21 +249,9 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "ea", "c", "e", "cab" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "c"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "aada"
-							               }
+						               new Token(TokenType.Special, "c"),
+						               new Token(TokenType.Special, "e"),
+						               new Token(TokenType.Data, "aada")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -448,56 +264,16 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "cacd", "d", "ded", "cab", "a", "b", "ea", "cbc" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "c"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               }
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Data, "e"),
+						               new Token(TokenType.Special, "b"),
+						               new Token(TokenType.Special, "b"),
+						               new Token(TokenType.Data, "c"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Special, "b"),
+						               new Token(TokenType.Special, "d")
 					               };
 				Check(input, specialTokens, expected);
 			}
@@ -509,26 +285,10 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "ad", "dcac", "c", "a" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "c"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "d"
-							               }
+						               new Token(TokenType.Data, "d"),
+						               new Token(TokenType.Special, "c"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Data, "d")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -541,16 +301,8 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "ebe" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "ebe"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "bbb"
-							               }
+						               new Token(TokenType.Special, "ebe"),
+						               new Token(TokenType.Data, "bbb")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -563,26 +315,10 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "bb", "ecc", "dc", "b", "bd", "d" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "b"
-							               }
+						               new Token(TokenType.Data, "e"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Special, "b"),
+						               new Token(TokenType.Special, "b")
 					               };
 
 				Check(input, specialTokens, expected);
@@ -595,41 +331,13 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "d", "aad", "cb", "a", "ebbb", "bdc", "ebb" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "c"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "b"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "bb"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "d"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "bdc"
-							               }
+						               new Token(TokenType.Data, "c"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Data, "b"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Data, "bb"),
+						               new Token(TokenType.Special, "d"),
+						               new Token(TokenType.Special, "bdc")
 					               };
 				var result = GetExpected(input, specialTokens).ToList();
 				CompareResultWithExpected(result, expected);
@@ -642,16 +350,8 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "eeba", "eeaa", "abad", "c", "cd" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "beeaeddab"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "c"
-							               }
+						               new Token(TokenType.Data, "beeaeddab"),
+						               new Token(TokenType.Special, "c")
 					               };
 				var result = GetExpected(input, specialTokens).ToList();
 				CompareResultWithExpected(result, expected);
@@ -664,26 +364,10 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "a", "ccc", "bead" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "ccc"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "bd"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "cdce"
-							               }
+						               new Token(TokenType.Special, "ccc"),
+						               new Token(TokenType.Data, "bd"),
+						               new Token(TokenType.Special, "a"),
+						               new Token(TokenType.Data, "cdce")
 					               };
 
 				var result = GetExpected(input, specialTokens).ToList();
@@ -697,11 +381,7 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "cea", "eded", "bcb" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "bbaccedbde"
-							               }
+						               new Token(TokenType.Data, "bbaccedbde")
 					               };
 
 				var result = GetExpected(input, specialTokens).ToList();
@@ -715,31 +395,11 @@ namespace EtlGate.Core.Tests
 				var specialTokens = new[] { "acdc", "e" };
 				var expected = new[]
 					               {
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "cdb"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "a"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Special,
-								               Value = "e"
-							               },
-						               new Token
-							               {
-								               TokenType = TokenType.Data,
-								               Value = "baba"
-							               }
+						               new Token(TokenType.Data, "cdb"),
+						               new Token(TokenType.Special, "e"),
+						               new Token(TokenType.Data, "a"),
+						               new Token(TokenType.Special, "e"),
+						               new Token(TokenType.Data, "baba")
 					               };
 
 				var result = GetExpected(input, specialTokens).ToList();
@@ -754,7 +414,7 @@ namespace EtlGate.Core.Tests
 				CompareResultWithExpected(result, expect);
 			}
 
-			private static void CompareResultWithExpected(List<Token> result, IList<Token> expect)
+			private static void CompareResultWithExpected(IList<Token> result, IList<Token> expect)
 			{
 				result.Count.ShouldBeEqualTo(expect.Count, "expected " + expect.Count + " tokens but received " + result.Count + ": \"" + String.Join("\", \"", result.Select(x => x.Value).ToArray()) + "\"");
 				for (var i = 0; i < result.Count; i++)
@@ -777,18 +437,10 @@ namespace EtlGate.Core.Tests
 					{
 						if (data.Length > 0)
 						{
-							yield return new Token
-								             {
-									             TokenType = TokenType.Data,
-									             Value = data.ToString()
-								             };
+							yield return new Token(TokenType.Data, data.ToString());
 							data = new StringBuilder();
 						}
-						yield return new Token
-							             {
-								             TokenType = TokenType.Special,
-								             Value = match
-							             };
+						yield return new Token(TokenType.Special, match);
 						input = input.Substring(match.Length);
 					}
 					else
@@ -799,11 +451,7 @@ namespace EtlGate.Core.Tests
 				}
 				if (data.Length > 0)
 				{
-					yield return new Token
-						             {
-							             TokenType = TokenType.Data,
-							             Value = data.ToString()
-						             };
+					yield return new Token(TokenType.Data, data.ToString());
 				}
 			}
 
