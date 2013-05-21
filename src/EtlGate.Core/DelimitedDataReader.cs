@@ -117,8 +117,8 @@ namespace EtlGate.Core
 			parseContext.Capture.Append(token.Value);
 			var capture = parseContext.Capture.ToString();
 			var potentialSeparator = capture.Substring(parseContext.Capture.Length - parseContext.SeparatorLength);
-			var fieldSeparatorIndex = parseContext.FieldSeparator.Length > 0 ? potentialSeparator.IndexOf(parseContext.FieldSeparator) : -1;
-			var recordSeparatorIndex = parseContext.RecordSeparator.Length > 0 ? potentialSeparator.IndexOf(parseContext.RecordSeparator) : -1;
+			var fieldSeparatorIndex = parseContext.FieldSeparator.Length > 0 ? potentialSeparator.IndexOf(parseContext.FieldSeparator, StringComparison.Ordinal) : -1;
+			var recordSeparatorIndex = parseContext.RecordSeparator.Length > 0 ? potentialSeparator.IndexOf(parseContext.RecordSeparator, StringComparison.Ordinal) : -1;
 			if (fieldSeparatorIndex != -1 || recordSeparatorIndex != -1)
 			{
 				if (fieldSeparatorIndex != -1 && recordSeparatorIndex != -1)
@@ -146,7 +146,7 @@ namespace EtlGate.Core
 				}
 				if (recordSeparatorIndex != -1)
 				{
-					var index = parseContext.FieldSeparator.IndexOf(parseContext.RecordSeparator);
+					var index = parseContext.FieldSeparator.IndexOf(parseContext.RecordSeparator, StringComparison.Ordinal);
 					var potentialFieldSeparator = potentialSeparator.Substring(recordSeparatorIndex - index);
 					if (index <= 0 || index >= 0 && potentialFieldSeparator.Length >= parseContext.FieldSeparator.Length && !potentialFieldSeparator.Contains(parseContext.FieldSeparator))
 					{
@@ -179,10 +179,10 @@ namespace EtlGate.Core
 
 				if (Enumerable.Range(0, parseContext.FieldSeparator.Length)
 				              .Where(x => x > 0)
-				              .Select(x => parseContext.FieldSeparator.Substring(0, x)).All(x => potentialSeparator.IndexOf(x) == -1) &&
+							  .Select(x => parseContext.FieldSeparator.Substring(0, x)).All(x => potentialSeparator.IndexOf(x, StringComparison.Ordinal) == -1) &&
 				    Enumerable.Range(0, parseContext.RecordSeparator.Length)
 				              .Where(x => x > 0)
-				              .Select(x => parseContext.RecordSeparator.Substring(0, x)).All(x => potentialSeparator.IndexOf(x) == -1))
+							  .Select(x => parseContext.RecordSeparator.Substring(0, x)).All(x => potentialSeparator.IndexOf(x, StringComparison.Ordinal) == -1))
 				{
 					parseContext.Handle = ReadUnquotedField;
 				}
