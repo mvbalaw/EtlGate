@@ -157,12 +157,12 @@ namespace EtlGate.Core
 			var capture = parseContext.Capture;
 			capture.Append(token.Value);
 			var potentialSeparator = capture.ToString(capture.Length - parseContext.SeparatorLength, parseContext.SeparatorLength);
-			var fieldSeparatorIndex = parseContext.FieldSeparator.Length > 0
-				                          ? potentialSeparator.IndexOf(parseContext.FieldSeparator, StringComparison.Ordinal)
-				                          : -1;
-			var recordSeparatorIndex = parseContext.RecordSeparator.Length > 0
-				                           ? potentialSeparator.IndexOf(parseContext.RecordSeparator, StringComparison.Ordinal)
-				                           : -1;
+			var fieldSeparatorIndex = parseContext.FieldSeparator.Length > 0 && 
+				potentialSeparator.EndsWith(parseContext.FieldSeparator, StringComparison.Ordinal) 
+				? potentialSeparator.Length - parseContext.FieldSeparator.Length : -1;
+			var recordSeparatorIndex = parseContext.RecordSeparator.Length > 0 && 
+				potentialSeparator.EndsWith(parseContext.RecordSeparator, StringComparison.Ordinal) 
+				? potentialSeparator.Length - parseContext.RecordSeparator.Length : -1;
 
 			if (fieldSeparatorIndex != -1 && recordSeparatorIndex != -1)
 			{
