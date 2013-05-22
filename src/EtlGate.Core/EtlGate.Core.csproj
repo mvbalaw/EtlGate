@@ -47,7 +47,6 @@
     <Compile Include="StreamTokenizer.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenMerger.cs" />
-    <Compile Include="TokenType.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />

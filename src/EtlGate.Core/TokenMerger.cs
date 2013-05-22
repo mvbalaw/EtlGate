@@ -24,38 +24,37 @@ namespace EtlGate.Core
 
 			foreach (var token in tokens)
 			{
-				switch (token.TokenType)
+				if (token is SpecialToken)
 				{
-					case TokenType.Special:
-						if (!mergeContext.CheckingSpecial)
+					if (!mergeContext.CheckingSpecial)
+					{
+						var match = mergeContext.SpecialTokensByLengthAscending.FirstOrDefault(x => x[0] == token.Value[0]);
+						if (match == null)
 						{
-							var match = mergeContext.SpecialTokensByLengthAscending.FirstOrDefault(x => x[0] == token.Value[0]);
-							if (match == null)
-							{
-								mergeContext.Data += token.Value;
-								continue;
-							}
-							mergeContext.Special = match;
-							mergeContext.CheckingSpecial = true;
-							mergeContext.SpecialIndex = 0;
+							mergeContext.Data += token.Value;
+							continue;
 						}
-						foreach (var toYield in ProcessSpecial(token, mergeContext))
+						mergeContext.Special = match;
+						mergeContext.CheckingSpecial = true;
+						mergeContext.SpecialIndex = 0;
+					}
+					foreach (var toYield in ProcessSpecial(token, mergeContext))
+					{
+						yield return toYield;
+					}
+				}
+				else
+				{
+					if (mergeContext.CheckingSpecial)
+					{
+						// didn't make it to the end
+						foreach (var toYield in Reprocess(mergeContext.Special.Substring(0, mergeContext.SpecialIndex), mergeContext, false))
 						{
 							yield return toYield;
 						}
-						break;
-					case TokenType.Data:
-						if (mergeContext.CheckingSpecial)
-						{
-							// didn't make it to the end
-							foreach (var toYield in Reprocess(mergeContext.Special.Substring(0, mergeContext.SpecialIndex), mergeContext, false))
-							{
-								yield return toYield;
-							}
-						}
-						mergeContext.Data += token.Value;
-						mergeContext.CheckingSpecial = false;
-						break;
+					}
+					mergeContext.Data += token.Value;
+					mergeContext.CheckingSpecial = false;
 				}
 			}
 
@@ -68,7 +67,7 @@ namespace EtlGate.Core
 			}
 			if (mergeContext.Data.Length > 0)
 			{
-				yield return new Token(TokenType.Data, mergeContext.Data);
+				yield return new DataToken(mergeContext.Data);
 			}
 		}
 
@@ -101,12 +100,12 @@ namespace EtlGate.Core
 			{
 				if (mergeContext.Data.Length > 0)
 				{
-					yield return new Token(TokenType.Data, mergeContext.Data);
+					yield return new DataToken(mergeContext.Data);
 					mergeContext.Data = "";
 				}
 
 				// reached end and no alternate, so special
-				yield return new Token(token.TokenType, mergeContext.Special);
+				yield return new SpecialToken(mergeContext.Special);
 				mergeContext.CheckingSpecial = false;
 				yield break;
 			}
@@ -137,12 +136,12 @@ namespace EtlGate.Core
 				{
 					if (mergeContext.Data.Length > 0)
 					{
-						yield return new Token(TokenType.Data, mergeContext.Data);
+						yield return new DataToken(mergeContext.Data);
 						mergeContext.Data = "";
 					}
 
 					// there is only a shorter special, use it
-					yield return new Token(TokenType.Special, shorter);
+					yield return new SpecialToken(shorter);
 
 					input = input.Substring(shorter.Length);
 					shorter = mergeContext.SpecialTokensByLengthAscending

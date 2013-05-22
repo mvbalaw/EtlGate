@@ -1,24 +1,33 @@
 ﻿namespace EtlGate.Core
 {
-	public class Token
+	public abstract class Token
 	{
-		private readonly TokenType _tokenType;
 		private readonly string _value;
 
-		public Token(TokenType tokenType, string value)
+		protected Token(string value)
 		{
-			_tokenType = tokenType;
 			_value = value;
-		}
-
-		public TokenType TokenType
-		{
-			get { return _tokenType; }
 		}
 
 		public string Value
 		{
 			get { return _value; }
+		}
+	}
+
+	public class DataToken : Token
+	{
+		public DataToken(string value)
+			: base(value)
+		{
+		}
+	}
+
+	public class SpecialToken : Token
+	{
+		public SpecialToken(string value)
+			: base(value)
+		{
 		}
 	}
 }

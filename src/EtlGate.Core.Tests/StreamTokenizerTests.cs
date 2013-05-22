@@ -21,7 +21,27 @@ namespace EtlGate.Core.Tests
 			[SetUp]
 			public void Before_each_test()
 			{
-				_tokenizer = new StreamTokenizer();
+				_tokenizer = new StreamTokenizer
+					             {
+						             ReadBufferSize = 10
+					             };
+			}
+
+			[Test]
+			public void FuzzTestIt()
+			{
+				const string characters = "abcdefgh";
+				var specials = "abc".ToArray();
+				var random = new Random();
+
+				for (var i = 0; i < 10000; i++)
+				{
+					var input = Enumerable.Range(0, 100).Select(x => characters[random.Next(characters.Length)]).ToArray();
+					var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+					var result = String.Join("", _tokenizer.Tokenize(memoryStream, specials).Select(x => x.Value).ToArray());
+					var expected = new String(input);
+					result.ShouldBeEqualTo(expected);
+				}
 			}
 
 			[Test]
@@ -50,10 +70,10 @@ namespace EtlGate.Core.Tests
 				var result = _tokenizer.Tokenize(memoryStream, new[] { 'a' }).ToList();
 				result.Count.ShouldBeEqualTo(2);
 				var first = result.First();
-				first.TokenType.ShouldBeEqualTo(TokenType.Special);
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
 				var second = result.Last();
-				second.TokenType.ShouldBeEqualTo(TokenType.Data);
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
 				second.Value.ShouldBeEqualTo("bc");
 			}
 
@@ -65,7 +85,7 @@ namespace EtlGate.Core.Tests
 				var result = _tokenizer.Tokenize(memoryStream, new[] { 'h' }).ToList();
 				result.Count.ShouldBeEqualTo(1);
 				var token = result.First();
-				token.TokenType.ShouldBeEqualTo(TokenType.Special);
+				token.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				token.Value.ShouldBeEqualTo(input);
 			}
 
@@ -77,7 +97,7 @@ namespace EtlGate.Core.Tests
 				var result = _tokenizer.Tokenize(memoryStream, new char[] { }).ToList();
 				result.Count.ShouldBeEqualTo(1);
 				var token = result.First();
-				token.TokenType.ShouldBeEqualTo(TokenType.Data);
+				token.GetType().ShouldBeEqualTo(typeof(DataToken));
 				token.Value.ShouldBeEqualTo(input);
 			}
 
