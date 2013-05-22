@@ -94,7 +94,7 @@ namespace EtlGate.Core
 			}
 			if (parseContext.Capture.Length > 0 ||
 			    parseContext.FieldNumber > 0 &&
-			    (parseContext.Handle == StartReadField || parseContext.Handle == ReadEscapedQuoteOrEndQuotedField))
+			    (parseContext.Handle == StartReadField || parseContext.Handle == BranchReadEscapedQuoteOrStartCollectingSeparator))
 			{
 				if (parseContext.Handle == StartReadField)
 				{
@@ -116,60 +116,7 @@ namespace EtlGate.Core
 			capture.Length = 0;
 		}
 
-		private static void CheckHeaderRowForDuplicateFieldNames(IEnumerable<string> fieldValues)
-		{
-			var uniqueHeaderLookup = new HashSet<string>();
-			foreach (var field in fieldValues)
-			{
-				if (!uniqueHeaderLookup.Add(field))
-				{
-					throw new ParseException(String.Format("Header row must not have more than one field with the same name. '{0}' appears more than once in the header row.", field));
-				}
-			}
-		}
-
-		private static bool ContinueCollectSeparator(Token token, List<string> fieldValues, ParseContext parseContext)
-		{
-			var capture = parseContext.Capture;
-			capture.Append(token.Value);
-			var potentialSeparator = capture.ToString(capture.Length - parseContext.SeparatorLength, parseContext.SeparatorLength);
-			var fieldSeparatorIndex = parseContext.FieldSeparator.Length > 0 ? potentialSeparator.IndexOf(parseContext.FieldSeparator, StringComparison.Ordinal) : -1;
-			var recordSeparatorIndex = parseContext.RecordSeparator.Length > 0 ? potentialSeparator.IndexOf(parseContext.RecordSeparator, StringComparison.Ordinal) : -1;
-			if (fieldSeparatorIndex != -1 || recordSeparatorIndex != -1)
-			{
-				if (fieldSeparatorIndex != -1 && recordSeparatorIndex != -1)
-				{
-					return ReadFirstSeparator(fieldValues, parseContext, fieldSeparatorIndex, recordSeparatorIndex, potentialSeparator);
-				}
-				if (fieldSeparatorIndex != -1 && fieldSeparatorIndex < recordSeparatorIndex || recordSeparatorIndex == -1)
-				{
-					return TryReadFieldSeparator(fieldValues, parseContext, fieldSeparatorIndex, potentialSeparator);
-				}
-
-				if (parseContext.IndexOfRecordSeparatorInFieldSeparator <= 0)
-				{
-					return TryReadRecordSeparator(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator);
-				}
-
-				// implicit:	parseContext.IndexOfRecordSeparatorInFieldSeparator > 0
-				var potentialFieldSeparator = potentialSeparator.Substring(recordSeparatorIndex - parseContext.IndexOfRecordSeparatorInFieldSeparator);
-				if (fieldSeparatorIndex == -1 &&
-				    potentialFieldSeparator.Length >= parseContext.FieldSeparator.Length)
-				{
-					return TryReadRecordSeparator(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator);
-				}
-			}
-			parseContext.SeparatorLength++;
-			if (parseContext.SeparatorLength > parseContext.FieldSeparator.Length &&
-			    parseContext.SeparatorLength > parseContext.RecordSeparator.Length)
-			{
-				TrySwitchToReadUnquotedField(parseContext, potentialSeparator);
-			}
-
-			return false;
-		}
-
-		private static bool ReadEscapedQuoteOrEndQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
+		private static bool BranchReadEscapedQuoteOrStartCollectingSeparator(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
 			if (token is DataToken)
 			{
@@ -183,21 +130,11 @@ namespace EtlGate.Core
 					parseContext.Handle = ReadQuotedField;
 					break;
 				default:
-					if (parseContext.FieldSeparator.Length > 0)
+					if (parseContext.FieldSeparator.Length > 0 && token.Value[0] == parseContext.FieldSeparator[0] ||
+					    parseContext.RecordSeparator.Length > 0 && token.Value[0] == parseContext.RecordSeparator[0])
 					{
 						// possible end of field, more fields follow
-						if (token.Value[0] == parseContext.FieldSeparator[0])
-						{
-							return StartCollectingSeparator(token, fieldValues, parseContext);
-						}
-					}
-					if (parseContext.RecordSeparator.Length > 0)
-					{
-						// possible end of field, more fields follow
-						if (token.Value[0] == parseContext.RecordSeparator[0])
-						{
-							return StartCollectingSeparator(token, fieldValues, parseContext);
-						}
+						return StartCollectingSeparator(token, fieldValues, parseContext);
 					}
 
 					ThrowUnescapedQuoteException(parseContext);
@@ -206,56 +143,71 @@ namespace EtlGate.Core
 			return false;
 		}
 
-		private static bool ReadFieldSeparator(ICollection<string> fieldValues, ParseContext parseContext)
+		private static void CheckHeaderRowForDuplicateFieldNames(IEnumerable<string> fieldValues)
+		{
+			var uniqueHeaderLookup = new HashSet<string>();
+			foreach (var field in fieldValues.Where(field => !uniqueHeaderLookup.Add(field)))
+			{
+				throw new ParseException(String.Format("Header row must not have more than one field with the same name. '{0}' appears more than once in the header row.", field));
+			}
+		}
+
+		private static bool ContinueCollectSeparator(Token token, List<string> fieldValues, ParseContext parseContext)
+		{
+			var capture = parseContext.Capture;
+			capture.Append(token.Value);
+			var potentialSeparator = capture.ToString(capture.Length - parseContext.SeparatorLength, parseContext.SeparatorLength);
+			var fieldSeparatorIndex = parseContext.FieldSeparator.Length > 0
+				                          ? potentialSeparator.IndexOf(parseContext.FieldSeparator, StringComparison.Ordinal)
+				                          : -1;
+			var recordSeparatorIndex = parseContext.RecordSeparator.Length > 0
+				                           ? potentialSeparator.IndexOf(parseContext.RecordSeparator, StringComparison.Ordinal)
+				                           : -1;
+
+			if (fieldSeparatorIndex != -1 && recordSeparatorIndex != -1)
+			{
+				return ReadFirstSeparator(fieldValues, parseContext, fieldSeparatorIndex, recordSeparatorIndex, potentialSeparator);
+			}
+
+			if (fieldSeparatorIndex != -1)
+			{
+				return TryReadFieldSeparator(fieldValues, parseContext, fieldSeparatorIndex, potentialSeparator);
+			}
+
+			if (recordSeparatorIndex != -1)
+			{
+				if (parseContext.IndexOfRecordSeparatorInFieldSeparator <= 0)
+				{
+					return TryReadRecordSeparator(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator);
+				}
+
+				// implicit:	parseContext.IndexOfRecordSeparatorInFieldSeparator > 0
+				var potentialFieldSeparator = potentialSeparator.Substring(recordSeparatorIndex - parseContext.IndexOfRecordSeparatorInFieldSeparator);
+				if (potentialFieldSeparator.Length >= parseContext.FieldSeparator.Length)
+				{
+					return TryReadRecordSeparator(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator);
+				}
+			}
+
+			parseContext.SeparatorLength++;
+
+			return false;
+		}
+
+		private static bool HandleFieldSeparator(ICollection<string> fieldValues, ParseContext parseContext)
 		{
 			AddFieldValue(fieldValues, parseContext);
 			parseContext.Handle = StartReadField;
 			return false;
 		}
 
-		private static bool ReadFirstSeparator(IList<string> fieldValues, ParseContext parseContext, int fieldSeparatorIndex, int recordSeparatorIndex, string potentialSeparator)
+		private static bool HandleRecordSeparator(IList<string> fieldValues, ParseContext parseContext)
 		{
-			if (fieldSeparatorIndex < recordSeparatorIndex)
-			{
-				return ReadLeadingFieldSeparatorFromCapture(fieldValues, parseContext, fieldSeparatorIndex, potentialSeparator);
-			}
-			return ReadLeadingRecordSeparatorFromCapture(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator);
-		}
-
-		private static bool ReadLeadingFieldSeparatorFromCapture(ICollection<string> fieldValues, ParseContext parseContext, int fieldSeparatorIndex, string potentialSeparator)
-		{
-			var capture = parseContext.Capture;
-			capture.Length = capture.Length - potentialSeparator.Length + fieldSeparatorIndex;
-			return ReadFieldSeparator(fieldValues, parseContext);
-		}
-
-		private static bool ReadLeadingRecordSeparatorFromCapture(IList<string> fieldValues, ParseContext parseContext, int recordSeparatorIndex, string potentialSeparator)
-		{
-			var capture = parseContext.Capture;
-			capture.Length = capture.Length - potentialSeparator.Length + recordSeparatorIndex;
-			return ReadRecordSeparator(fieldValues, parseContext);
-		}
-
-		private static bool ReadQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
-		{
-			if (token is DataToken || token.Value[0] != '"')
-			{
-				parseContext.Capture.Append(token.Value);
-			}
-			else
-			{
-				parseContext.Handle = ReadEscapedQuoteOrEndQuotedField;
-			}
-			return false;
-		}
-
-		private static bool ReadRecordSeparator(IList<string> fieldValues, ParseContext parseContext)
-		{
-			AddFieldValue(fieldValues, parseContext);
+			HandleFieldSeparator(fieldValues, parseContext);
 			parseContext.ResetFieldNumber();
-			parseContext.Handle = StartReadField;
-			if (parseContext.HasHeaderRow && parseContext.ReadingHeaderRow)
+			if (parseContext.ReadingHeaderRow)
 			{
+				CheckHeaderRowForDuplicateFieldNames(fieldValues);
 				parseContext.ReadingHeaderRow = false;
 				var headerRowFieldIndexes = new Dictionary<string, int>();
 				for (var i = 0; i < fieldValues.Count; i++)
@@ -264,12 +216,38 @@ namespace EtlGate.Core
 					headerRowFieldIndexes[key] = i;
 				}
 				parseContext.HeaderRowFieldIndexes = headerRowFieldIndexes;
-				CheckHeaderRowForDuplicateFieldNames(fieldValues);
 				fieldValues.Clear();
 				return false;
 			}
 			parseContext.RecordNumber++;
 			return true;
+		}
+
+		private static bool ReadFirstSeparator(IList<string> fieldValues, ParseContext parseContext, int fieldSeparatorIndex, int recordSeparatorIndex, string potentialSeparator)
+		{
+			return fieldSeparatorIndex < recordSeparatorIndex
+				       ? ReadLeadingSeparatorFromCapture(fieldValues, parseContext, fieldSeparatorIndex, potentialSeparator, HandleFieldSeparator)
+				       : ReadLeadingSeparatorFromCapture(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator, HandleRecordSeparator);
+		}
+
+		private static bool ReadLeadingSeparatorFromCapture(IList<string> fieldValues, ParseContext parseContext, int separatorIndex, string potentialSeparator, Func<IList<string>, ParseContext, bool> readSeparatorFunc)
+		{
+			var capture = parseContext.Capture;
+			capture.Length = capture.Length - potentialSeparator.Length + separatorIndex;
+			return readSeparatorFunc(fieldValues, parseContext);
+		}
+
+		private static bool ReadQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
+		{
+			if (token.Value[0] != '"' || token is DataToken)
+			{
+				parseContext.Capture.Append(token.Value);
+			}
+			else
+			{
+				parseContext.Handle = BranchReadEscapedQuoteOrStartCollectingSeparator;
+			}
+			return false;
 		}
 
 		private static bool ReadUnquotedField(Token token, List<string> fieldValues, ParseContext parseContext)
@@ -314,7 +292,6 @@ namespace EtlGate.Core
 		{
 			if (parseContext.ReadingQuotedField && separatorIndex != 0)
 			{
-				parseContext.Handle = ReadQuotedField;
 				ThrowUnescapedQuoteException(parseContext);
 			}
 		}
@@ -324,43 +301,22 @@ namespace EtlGate.Core
 			throw new ParseException("Unescaped '\"' on line " + parseContext.RecordNumber + " field " + parseContext.FieldNumber);
 		}
 
-		private static bool TryReadFieldSeparator(ICollection<string> fieldValues, ParseContext parseContext, int fieldSeparatorIndex, string potentialSeparator)
+		private static bool TryReadFieldSeparator(IList<string> fieldValues, ParseContext parseContext, int fieldSeparatorIndex, string potentialSeparator)
 		{
 			ThrowIfReadingQuotedFieldAndSeparatorIsNotFirst(parseContext, fieldSeparatorIndex);
-			return ReadLeadingFieldSeparatorFromCapture(fieldValues, parseContext, fieldSeparatorIndex, potentialSeparator);
+			return ReadLeadingSeparatorFromCapture(fieldValues, parseContext, fieldSeparatorIndex, potentialSeparator, HandleFieldSeparator);
 		}
 
 		private static bool TryReadRecordSeparator(IList<string> fieldValues, ParseContext parseContext, int recordSeparatorIndex, string potentialSeparator)
 		{
 			ThrowIfReadingQuotedFieldAndSeparatorIsNotFirst(parseContext, recordSeparatorIndex);
 			var remainder = parseContext.Capture.ToString(parseContext.Capture.Length - potentialSeparator.Length + parseContext.RecordSeparator.Length, potentialSeparator.Length - parseContext.RecordSeparator.Length);
-			var toReturn = ReadLeadingRecordSeparatorFromCapture(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator);
+			var toReturn = ReadLeadingSeparatorFromCapture(fieldValues, parseContext, recordSeparatorIndex, potentialSeparator, HandleRecordSeparator);
 			if (remainder.Length > 0)
 			{
 				parseContext.Capture.Append(remainder);
 			}
 			return toReturn;
-		}
-
-		private static void TrySwitchToReadUnquotedField(ParseContext parseContext, string potentialSeparator)
-		{
-			if (parseContext.ReadingQuotedField)
-			{
-				parseContext.Handle = ReadQuotedField;
-				ThrowUnescapedQuoteException(parseContext);
-			}
-
-			if (Enumerable.Range(0, parseContext.FieldSeparator.Length)
-			              .Where(x => x > 0)
-			              .Select(x => parseContext.FieldSeparator.Substring(0, x))
-			              .All(x => potentialSeparator.IndexOf(x, StringComparison.Ordinal) == -1) &&
-			    Enumerable.Range(0, parseContext.RecordSeparator.Length)
-			              .Where(x => x > 0)
-			              .Select(x => parseContext.RecordSeparator.Substring(0, x))
-			              .All(x => potentialSeparator.IndexOf(x, StringComparison.Ordinal) == -1))
-			{
-				parseContext.Handle = ReadUnquotedField;
-			}
 		}
 
 		private class ParseContext
