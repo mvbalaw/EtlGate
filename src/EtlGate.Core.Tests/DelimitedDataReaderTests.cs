@@ -304,7 +304,7 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
-			[Ignore("Still has failures for long field separators that contain the record separator")]
+			[Ignore("Still has failures for incomplete separator at the end of the stream")]
 			public void FuzzTestIt()
 			{
 				const string values = "a\r\n,\"";
@@ -417,6 +417,21 @@ namespace EtlGate.Core.Tests
 					               {
 						               new Record(
 							               "",
+							               "a"
+							               )
+					               };
+				Check(input, expected, fieldSeparator);
+			}
+
+			[Test]
+			public void Given_a_stream_containing__COMMA_RETURN_a__and_field_separator__RETURN__and_quoted_fields_NOT_supported__should_return_only_1_row_with_fields__COMMA__a()
+			{
+				const string input = ",\ra";
+				const string fieldSeparator = "\r";
+				var expected = new[]
+					               {
+						               new Record(
+							               ",",
 							               "a"
 							               )
 					               };
@@ -571,7 +586,6 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
-			[Ignore("Need to handle this case - it looses the 'a' after the newline")]
 			public void Given_a_stream_containing__QUOTE_RETURN_NEWLINE_a_RETURN_QUOTE_COMMA__and_field_separator__QUOTE_RETURN_NEWLINE_RETURN__and_quoted_fields_NOT_supported__should_return_2_rows_with_1_field_each__QUOTE__a_RETURN_QUOTE_COMMA()
 			{
 				const string input = "\"\r\na\r\",";
@@ -646,10 +660,8 @@ namespace EtlGate.Core.Tests
 				var expected = new[]
 					               {
 						               new Record(
-							               "\r\"\na"
-							               ),
-						               new Record(
-							               "a\"\"a"
+							               "\r\"\na",
+							               "\"\"a"
 							               )
 					               };
 				Check(input, expected, fieldSeparator);
@@ -697,6 +709,25 @@ namespace EtlGate.Core.Tests
 						               new Record(
 							               "a\""
 							               , ","
+							               )
+					               };
+				Check(input, expected, fieldSeparator, supportQuotedFields);
+			}
+
+			[Test]
+			[Ignore("TODO handle incomplete separator at the end of the stream")]
+			public void Given_a_stream_containing__a_RETURN_NEWLINE_RETURN__and_field_separator__RETURN_COMMA_RETURN_COMMA__and_quoted_fields_ARE_supported__should_return_2_rows_with_1_field_each__a__RETURN()
+			{
+				const string input = "a\r\n\r";
+				const string fieldSeparator = "\r,\r,";
+				const bool supportQuotedFields = true;
+				var expected = new[]
+					               {
+						               new Record(
+							               "a"
+							               ),
+						               new Record(
+							               "\r"
 							               )
 					               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);

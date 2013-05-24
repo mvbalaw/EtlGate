@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,17 +31,44 @@ namespace EtlGate.Core.Tests
 			[Test]
 			public void FuzzTestIt()
 			{
-				const string characters = "abcdefgh";
-				var specials = "abc".ToArray();
+				const string characters = "abcde";
+				var specials = new[] { 'a' };
 				var random = new Random();
 
 				for (var i = 0; i < 10000; i++)
 				{
 					var input = Enumerable.Range(0, 100).Select(x => characters[random.Next(characters.Length)]).ToArray();
+					var commands = Enumerable.Range(0, 1000).Select(x => "hsp"[random.Next(3)]).ToArray();
 					var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-					var result = String.Join("", _tokenizer.Tokenize(memoryStream, specials).Select(x => x.Value).ToArray());
+					var saved = new StringBuilder();
+					var holding = new StringBuilder();
+					var command = 0;
+					foreach (var token in _tokenizer.Tokenize(memoryStream, specials))
+					{
+						if (token is DataToken)
+						{
+							token.Value.IndexOfAny(specials).ShouldBeEqualTo(-1);
+						}
+						switch (commands[command++])
+						{
+							case 'h': // hold
+								holding.Append(token.Value);
+								break;
+							case 's': // save
+								saved.Append(holding);
+								holding.Length = 0;
+								holding.Append(token.Value);
+								break;
+							case 'p': // pushback
+								holding.Append(token.Value);
+								_tokenizer.PushBack(holding.ToString().ToCharArray());
+								holding.Length = 0;
+								break;
+						}
+					}
+					saved.Append(holding);
 					var expected = new String(input);
-					result.ShouldBeEqualTo(expected);
+					saved.ToString().ShouldBeEqualTo(expected);
 				}
 			}
 
@@ -63,6 +91,153 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
+			public void Given_a_stream_containing__abbbbbbbbbbb__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbbbb_data()
+			{
+				const string input = "abbbbbbbbbbb";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(2);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abbbbbbbbbbba__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbbbb_data__a_special()
+			{
+				const string input = "abbbbbbbbbbba";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
+
+				var third = result[2];
+				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				third.Value.ShouldBeEqualTo("a");
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_1st_token__should_return__a_special__bc_data()
+			{
+				const string input = "abc";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 0)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(2);
+				var first = result.First();
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+				var second = result.Last();
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bc");
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bc_data()
+			{
+				const string input = "abc";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(2);
+				var first = result.First();
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+				var second = result.Last();
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bc");
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_with__abc__should_return__a_special__bc_data()
+			{
+				const string input = "abc";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(input.ToCharArray());
+						result.Clear();
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(2);
+				var first = result.First();
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+				var second = result.Last();
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bc");
+			}
+
+			[Test]
 			public void Given_a_stream_containing__abc__and_specials__a__should_return__a_special__bc_data()
 			{
 				const string input = "abc";
@@ -75,6 +250,72 @@ namespace EtlGate.Core.Tests
 				var second = result.Last();
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
 				second.Value.ShouldBeEqualTo("bc");
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abca__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bc_data__a_special()
+			{
+				const string input = "abca";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bc");
+
+				var third = result[2];
+				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				third.Value.ShouldBeEqualTo("a");
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abca__and_specials__a__and_pushback_is_called_on_the_3rd_token__should_return__a_special__bc_data__a_special()
+			{
+				const string input = "abca";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 2)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bc");
+
+				var third = result[2];
+				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				third.Value.ShouldBeEqualTo("a");
 			}
 
 			[Test]
