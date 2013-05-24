@@ -117,33 +117,36 @@ namespace EtlGate.Core
 
 		private bool BranchReadEscapedQuoteOrStartCollectingSeparator(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
-			if (token is DataToken)
+			if (token is SpecialToken)
+			{
+				switch (token.Value)
+				{
+					case "\"":
+						parseContext.Capture.Append('"');
+						parseContext.Handle = ReadQuotedField;
+						break;
+					default:
+						var ch = token.Value[0];
+						var fieldSeparator = parseContext.FieldSeparator;
+						if (fieldSeparator.Length > 0 && ch.Equals(fieldSeparator[0]))
+						{
+							return StartCollectingFieldSeparator(token, fieldValues, parseContext);
+						}
+						var recordSeparator = parseContext.RecordSeparator;
+						if (recordSeparator.Length > 0 && ch.Equals(recordSeparator[0]))
+						{
+							return StartCollectingRecordSeparator(token, fieldValues, parseContext);
+						}
+
+						ThrowUnescapedQuoteException(parseContext);
+						break;
+				}
+			}
+			else if (token is DataToken)
 			{
 				ThrowUnescapedQuoteException(parseContext);
 			}
 
-			switch (token.Value)
-			{
-				case "\"":
-					parseContext.Capture.Append('"');
-					parseContext.Handle = ReadQuotedField;
-					break;
-				default:
-					var ch = token.Value[0];
-					var fieldSeparator = parseContext.FieldSeparator;
-					if (fieldSeparator.Length > 0 && ch.Equals(fieldSeparator[0]))
-					{
-						return StartCollectingFieldSeparator(token, fieldValues, parseContext);
-					}
-					var recordSeparator = parseContext.RecordSeparator;
-					if (recordSeparator.Length > 0 && ch.Equals(recordSeparator[0]))
-					{
-						return StartCollectingRecordSeparator(token, fieldValues, parseContext);
-					}
-
-					ThrowUnescapedQuoteException(parseContext);
-					break;
-			}
 			return false;
 		}
 
@@ -160,6 +163,10 @@ namespace EtlGate.Core
 		{
 			var capture = parseContext.Capture;
 			capture.Append(token.Value);
+			if (!(token is SpecialToken))
+			{
+				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.RecordSeparator, ContinueCollectRecordSeparator);
+			}
 
 			var fieldSeparator = parseContext.FieldSeparator;
 			if (fieldSeparator.Length.Equals(parseContext.SeparatorLength + 1))
@@ -174,10 +181,6 @@ namespace EtlGate.Core
 				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.RecordSeparator, ContinueCollectRecordSeparator);
 			}
 
-			if (token is DataToken)
-			{
-				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.RecordSeparator, ContinueCollectRecordSeparator);
-			}
 			parseContext.SeparatorLength++;
 
 			return false;
@@ -187,6 +190,10 @@ namespace EtlGate.Core
 		{
 			var capture = parseContext.Capture;
 			capture.Append(token.Value);
+			if (!(token is SpecialToken))
+			{
+				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.FieldSeparator, ContinueCollectFieldSeparator);
+			}
 
 			var recordSeparator = parseContext.RecordSeparator;
 			if (recordSeparator.Length.Equals(parseContext.SeparatorLength + 1))
@@ -198,11 +205,6 @@ namespace EtlGate.Core
 					capture.Length -= recordSeparator.Length;
 					return HandleRecordSeparator(fieldValues, parseContext);
 				}
-				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.FieldSeparator, ContinueCollectFieldSeparator);
-			}
-
-			if (token is DataToken)
-			{
 				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.FieldSeparator, ContinueCollectFieldSeparator);
 			}
 
@@ -285,7 +287,7 @@ namespace EtlGate.Core
 
 		private bool ReadQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
-			if (token.Value[0] != '"' || token is DataToken)
+			if ( !(token is SpecialToken) || token.Value[0] != '"')
 			{
 				parseContext.Capture.Append(token.Value);
 			}
@@ -344,17 +346,20 @@ namespace EtlGate.Core
 
 		private bool StartReadField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
-			parseContext.IncrementFieldNumber();
-			if (parseContext.SupportQuotedFields && token.Value.Equals("\"") && token is SpecialToken)
+			if (!(token is EndOfStreamToken))
 			{
-				parseContext.ReadingQuotedField = true;
-				parseContext.Handle = ReadQuotedField;
-			}
-			else
-			{
-				parseContext.ReadingQuotedField = false;
-				parseContext.Handle = ReadUnquotedField;
-				return ReadUnquotedField(token, fieldValues, parseContext);
+				parseContext.IncrementFieldNumber();
+				if (parseContext.SupportQuotedFields && token.Value.Equals("\"") && token is SpecialToken)
+				{
+					parseContext.ReadingQuotedField = true;
+					parseContext.Handle = ReadQuotedField;
+				}
+				else
+				{
+					parseContext.ReadingQuotedField = false;
+					parseContext.Handle = ReadUnquotedField;
+					return ReadUnquotedField(token, fieldValues, parseContext);
+				}
 			}
 			return false;
 		}

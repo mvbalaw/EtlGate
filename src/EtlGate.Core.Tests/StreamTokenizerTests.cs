@@ -109,7 +109,7 @@ namespace EtlGate.Core.Tests
 					}
 					tokenCount++;
 				}
-				result.Count.ShouldBeEqualTo(2);
+				result.Count.ShouldBeEqualTo(3);
 				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
@@ -117,12 +117,80 @@ namespace EtlGate.Core.Tests
 				var second = result[1];
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
 				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
 			public void Given_a_stream_containing__abbbbbbbbbbba__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbbbb_data__a_special()
 			{
 				const string input = "abbbbbbbbbbba";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(4);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
+
+				var third = result[2];
+				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				third.Value.ShouldBeEqualTo("a");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_1st_token__should_return__a_special__bc_data()
+			{
+				const string input = "abc";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 0)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bc");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bc_data()
+			{
+				const string input = "abc";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
@@ -145,15 +213,13 @@ namespace EtlGate.Core.Tests
 
 				var second = result[1];
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
-				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
+				second.Value.ShouldBeEqualTo("bc");
 
-				var third = result[2];
-				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
-				third.Value.ShouldBeEqualTo("a");
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
-			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_1st_token__should_return__a_special__bc_data()
+			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_EndOfStreamToken__should_return__a_special__bc_data()
 			{
 				const string input = "abc";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
@@ -161,9 +227,10 @@ namespace EtlGate.Core.Tests
 				var tokenCount = 0;
 				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
 				{
-					if (tokenCount == 0)
+					if (tokenCount == 2)
 					{
-						_tokenizer.PushBack(token.Value.ToCharArray());
+						result.Clear();
+						_tokenizer.PushBack(input.ToCharArray());
 					}
 					else
 					{
@@ -171,41 +238,16 @@ namespace EtlGate.Core.Tests
 					}
 					tokenCount++;
 				}
-				result.Count.ShouldBeEqualTo(2);
-				var first = result.First();
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
-				var second = result.Last();
-				second.GetType().ShouldBeEqualTo(typeof(DataToken));
-				second.Value.ShouldBeEqualTo("bc");
-			}
 
-			[Test]
-			public void Given_a_stream_containing__abc__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bc_data()
-			{
-				const string input = "abc";
-				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-				var result = new List<Token>();
-				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
-				{
-					if (tokenCount == 1)
-					{
-						_tokenizer.PushBack(token.Value.ToCharArray());
-					}
-					else
-					{
-						result.Add(token);
-					}
-					tokenCount++;
-				}
-				result.Count.ShouldBeEqualTo(2);
-				var first = result.First();
-				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
-				first.Value.ShouldBeEqualTo("a");
-				var second = result.Last();
+				var second = result[1];
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
 				second.Value.ShouldBeEqualTo("bc");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -228,13 +270,16 @@ namespace EtlGate.Core.Tests
 					}
 					tokenCount++;
 				}
-				result.Count.ShouldBeEqualTo(2);
-				var first = result.First();
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
-				var second = result.Last();
+
+				var second = result[1];
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
 				second.Value.ShouldBeEqualTo("bc");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -243,13 +288,16 @@ namespace EtlGate.Core.Tests
 				const string input = "abc";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _tokenizer.Tokenize(memoryStream, new[] { 'a' }).ToList();
-				result.Count.ShouldBeEqualTo(2);
-				var first = result.First();
+				result.Count.ShouldBeEqualTo(3);
+				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
-				var second = result.Last();
+
+				var second = result[1];
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
 				second.Value.ShouldBeEqualTo("bc");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -271,7 +319,7 @@ namespace EtlGate.Core.Tests
 					}
 					tokenCount++;
 				}
-				result.Count.ShouldBeEqualTo(3);
+				result.Count.ShouldBeEqualTo(4);
 				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
@@ -283,6 +331,8 @@ namespace EtlGate.Core.Tests
 				var third = result[2];
 				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				third.Value.ShouldBeEqualTo("a");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -304,7 +354,7 @@ namespace EtlGate.Core.Tests
 					}
 					tokenCount++;
 				}
-				result.Count.ShouldBeEqualTo(3);
+				result.Count.ShouldBeEqualTo(4);
 				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				first.Value.ShouldBeEqualTo("a");
@@ -316,6 +366,8 @@ namespace EtlGate.Core.Tests
 				var third = result[2];
 				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				third.Value.ShouldBeEqualTo("a");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -324,10 +376,12 @@ namespace EtlGate.Core.Tests
 				const string input = "h";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _tokenizer.Tokenize(memoryStream, new[] { 'h' }).ToList();
-				result.Count.ShouldBeEqualTo(1);
+				result.Count.ShouldBeEqualTo(2);
 				var token = result.First();
 				token.GetType().ShouldBeEqualTo(typeof(SpecialToken));
 				token.Value.ShouldBeEqualTo(input);
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -336,10 +390,12 @@ namespace EtlGate.Core.Tests
 				const string input = "hello";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _tokenizer.Tokenize(memoryStream, new char[] { }).ToList();
-				result.Count.ShouldBeEqualTo(1);
+				result.Count.ShouldBeEqualTo(2);
 				var token = result.First();
 				token.GetType().ShouldBeEqualTo(typeof(DataToken));
 				token.Value.ShouldBeEqualTo(input);
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 
 			[Test]
@@ -348,7 +404,9 @@ namespace EtlGate.Core.Tests
 				var input = String.Empty;
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _tokenizer.Tokenize(memoryStream, new char[] { }).ToList();
-				result.Count.ShouldBeEqualTo(0);
+				result.Count.ShouldBeEqualTo(1);
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
 		}
 	}

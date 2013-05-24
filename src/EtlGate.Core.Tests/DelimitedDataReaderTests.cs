@@ -304,13 +304,12 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
-			[Ignore("Still has failures for incomplete separator at the end of the stream")]
 			public void FuzzTestIt()
 			{
 				const string values = "a\r\n,\"";
 				var random = new Random();
 				const string recordSeparator = "\r\n";
-				for (var i = 0; i < 1000000; i++)
+				for (var i = 0; i < 10000; i++)
 				{
 					var input = new StringBuilder();
 					for (var j = 0; j < 10; j++)
@@ -715,7 +714,6 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
-			[Ignore("TODO handle incomplete separator at the end of the stream")]
 			public void Given_a_stream_containing__a_RETURN_NEWLINE_RETURN__and_field_separator__RETURN_COMMA_RETURN_COMMA__and_quoted_fields_ARE_supported__should_return_2_rows_with_1_field_each__a__RETURN()
 			{
 				const string input = "a\r\n\r";
@@ -1127,11 +1125,8 @@ namespace EtlGate.Core.Tests
 					               {
 						               new List<string>
 							               {
-								               "\r\"\na"
-							               },
-						               new List<string>
-							               {
-								               "a\"\"a"
+								               "\r\"\na",
+								               "\"\"a"
 							               }
 					               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
@@ -1442,7 +1437,7 @@ namespace EtlGate.Core.Tests
 					}
 
 					var idx = rowText.IndexOf(fieldSeparator);
-					if (fieldSeparator.Length < recordSeparator.Length)
+					if (fieldSeparator.Length > recordSeparator.Length)
 					{
 						if (fieldSeparator.Length > 0 && idx == 0)
 						{

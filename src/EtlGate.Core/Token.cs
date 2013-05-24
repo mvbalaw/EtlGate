@@ -30,4 +30,12 @@
 		{
 		}
 	}
+
+	public class EndOfStreamToken : Token
+	{
+		public EndOfStreamToken()
+			: base("")
+		{
+		}
+	}
 }

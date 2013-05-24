@@ -59,36 +59,38 @@ namespace EtlGate.Core
 			using (var reader = new StreamReader(stream))
 			{
 				var next = new char[_readBufferSize];
-				int count;
-				do
+				var count = reader.Read(next, 0, _readBufferSize);
+				while (count > 0)
 				{
-					count = reader.Read(next, 0, _readBufferSize);
-					if (count == 0)
-					{
-						break;
-					}
-
 					foreach (var token in TokenizeArray(next, count, lookup, data))
 					{
 						yield return token;
 					}
-				} while (count > 0);
-			}
-
-			while (data.Length > 0)
-			{
-				yield return new DataToken(data.ToString());
-				data.Length = 0;
-				if (_pushBack != null)
-				{
-					var copy = _pushBack;
-					_pushBack = null;
-					foreach (var token in TokenizeArray(copy, copy.Length, lookup, data))
-					{
-						yield return token;
-					}
+					count = reader.Read(next, 0, _readBufferSize);
 				}
 			}
+
+			do
+			{
+				while (data.Length > 0 || _pushBack != null)
+				{
+					if (data.Length > 0)
+					{
+						yield return new DataToken(data.ToString());
+						data.Length = 0;
+					}
+					if (_pushBack != null)
+					{
+						var copy = _pushBack;
+						_pushBack = null;
+						foreach (var token in TokenizeArray(copy, copy.Length, lookup, data))
+						{
+							yield return token;
+						}
+					}
+				}
+				yield return new EndOfStreamToken();
+			} while (_pushBack != null);
 		}
 
 		private void HandlePushback(ref char[] next, ref int i, ref int count)
