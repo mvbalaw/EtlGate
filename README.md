@@ -7,8 +7,9 @@ EtlGate is a library to facilitate reading delimited files.
 
 It has the following features:
 
-* Feature 1 goes here
-* Feature 2 goes here
+* comma delimited (CSV) data reader provided
+* based on an any-sequence delimited data reader
+* reads from a stream and returns IEnumerable so there is virtually no limit to your data size
 
 
 ## HOW TO BUILD
