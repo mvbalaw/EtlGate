@@ -47,7 +47,7 @@
     <Compile Include="Record.cs" />
     <Compile Include="StreamTokenizer.cs" />
     <Compile Include="Token.cs" />
-    <Compile Include="TokenMerger.cs" />
+    <Compile Include="Trie.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

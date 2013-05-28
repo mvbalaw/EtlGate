@@ -70,7 +70,7 @@ namespace EtlGate.Core
 			{
 				specialTokens.Add("\"");
 			}
-			var specialChars = (fieldSeparator + recordSeparator + (supportQuotedFields ? "\"" : "")).Distinct().ToArray();
+			var specialChars = specialTokens.SelectMany(x => x).Distinct().ToArray();
 			foreach (var token in _streamTokenizer.Tokenize(bufferedStream, specialChars))
 			{
 				var yieldIt = parseContext.Handle(token, fieldValues, parseContext);
@@ -165,20 +165,21 @@ namespace EtlGate.Core
 			capture.Append(token.Value);
 			if (!(token is SpecialToken))
 			{
-				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.RecordSeparator, ContinueCollectRecordSeparator);
+				return HandleFailureToMatchExpectedSeparator(token, fieldValues, parseContext, capture, parseContext.RecordSeparator, HandleRecordSeparator);
 			}
 
 			var fieldSeparator = parseContext.FieldSeparator;
 			if (fieldSeparator.Length.Equals(parseContext.SeparatorLength + 1))
 			{
-				var potentialSeparator = capture.ToString(capture.Length - fieldSeparator.Length, fieldSeparator.Length);
+				var separatorStartIndex = capture.Length - fieldSeparator.Length;
+				var potentialSeparator = capture.ToString(separatorStartIndex, fieldSeparator.Length);
 
 				if (potentialSeparator.Equals(fieldSeparator))
 				{
-					capture.Length -= fieldSeparator.Length;
+					capture.Length = separatorStartIndex;
 					return HandleFieldSeparator(fieldValues, parseContext);
 				}
-				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.RecordSeparator, ContinueCollectRecordSeparator);
+				return HandleFailureToMatchExpectedSeparator(token, fieldValues, parseContext, capture, parseContext.RecordSeparator, HandleRecordSeparator);
 			}
 
 			parseContext.SeparatorLength++;
@@ -192,20 +193,21 @@ namespace EtlGate.Core
 			capture.Append(token.Value);
 			if (!(token is SpecialToken))
 			{
-				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.FieldSeparator, ContinueCollectFieldSeparator);
+				return HandleFailureToMatchExpectedSeparator(token, fieldValues, parseContext, capture, parseContext.FieldSeparator, HandleFieldSeparator);
 			}
 
 			var recordSeparator = parseContext.RecordSeparator;
 			if (recordSeparator.Length.Equals(parseContext.SeparatorLength + 1))
 			{
-				var potentialSeparator = capture.ToString(capture.Length - recordSeparator.Length, recordSeparator.Length);
+				var separatorStartIndex = capture.Length - recordSeparator.Length;
+				var potentialSeparator = capture.ToString(separatorStartIndex, recordSeparator.Length);
 
 				if (potentialSeparator.Equals(recordSeparator))
 				{
-					capture.Length -= recordSeparator.Length;
+					capture.Length = separatorStartIndex;
 					return HandleRecordSeparator(fieldValues, parseContext);
 				}
-				return HandleFailureToMatchExpectedSeparator(token, parseContext, capture, parseContext.FieldSeparator, ContinueCollectFieldSeparator);
+				return HandleFailureToMatchExpectedSeparator(token, fieldValues, parseContext, capture, parseContext.FieldSeparator, HandleFieldSeparator);
 			}
 
 			parseContext.SeparatorLength++;
@@ -224,13 +226,17 @@ namespace EtlGate.Core
 			// push back everything that came after
 
 			startIndex++;
-			_streamTokenizer.PushBack(capture.ToString(startIndex, capture.Length - startIndex).ToCharArray());
+			var contentLength = capture.Length - startIndex;
+			if (contentLength > 0)
+			{
+				_streamTokenizer.PushBack(capture.ToString(startIndex, contentLength));
+			}
 			capture.Length = startIndex;
 			parseContext.Handle = ReadUnquotedField;
 			return false;
 		}
 
-		private bool HandleFailureToMatchExpectedSeparator(Token token, ParseContext parseContext, StringBuilder capture, string otherSeparator, Func<Token, List<string>, ParseContext, bool> otherSeparatorHandler)
+		private bool HandleFailureToMatchExpectedSeparator(Token token, List<string> fieldValues, ParseContext parseContext, StringBuilder capture, string otherSeparator, Func<List<string>, ParseContext, bool> otherSeparatorHandler)
 		{
 			var startIndex = capture.Length - parseContext.SeparatorLength - token.Value.Length;
 
@@ -245,11 +251,13 @@ namespace EtlGate.Core
 				if (potentialSeparator.Equals(otherSeparator))
 				{
 					// pushback to the start of the separator
-					_streamTokenizer.PushBack(capture.ToString(startIndex, capture.Length - startIndex).ToCharArray());
+					var contentLength = capture.Length - startIndex - otherSeparator.Length;
+					if (contentLength > 0)
+					{
+						_streamTokenizer.PushBack(capture.ToString(startIndex + otherSeparator.Length, contentLength));
+					}
 					capture.Length = startIndex;
-					parseContext.Handle = otherSeparatorHandler;
-					parseContext.SeparatorLength = 0;
-					return false;
+					return otherSeparatorHandler(fieldValues, parseContext);
 				}
 			}
 
@@ -287,7 +295,7 @@ namespace EtlGate.Core
 
 		private bool ReadQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
-			if ( !(token is SpecialToken) || token.Value[0] != '"')
+			if (!(token is SpecialToken) || token.Value[0] != '"')
 			{
 				parseContext.Capture.Append(token.Value);
 			}
