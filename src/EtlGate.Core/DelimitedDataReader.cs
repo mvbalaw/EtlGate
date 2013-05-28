@@ -80,7 +80,7 @@ namespace EtlGate.Core
 					fieldValues = parseContext.HasHeaderRow
 						              ? new List<string>(parseContext.HeaderRowFieldIndexes.Count)
 						              : new List<string>(fieldValues.Count);
-					parseContext.Capture.Clear();
+					parseContext.Capture.Length = 0;
 				}
 			}
 			if (parseContext.Handle == ReadQuotedField)
