@@ -13,9 +13,9 @@ using System;
 namespace CodeQuery
 // ReSharper restore CheckNamespace
 {
-	public static class TypeExtensions
+	internal static class TypeExtensions
 	{
-		public static bool IsGenericAssignableFrom(this Type target, Type source)
+		internal static bool IsGenericAssignableFrom(this Type target, Type source)
 		{
 			if (!target.IsGenericType)
 			{
