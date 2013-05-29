@@ -38,18 +38,41 @@
     <Compile Include="CsvReader.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="DateFieldComparer.cs" />
     <Compile Include="DelimitedDataReader.cs" />
     <Compile Include="Extensions\IEnumerableTExtensions.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="IFieldComparer.cs" />
+    <Compile Include="MvbaCore\CodeQuery\FieldInfoExtensions.cs" />
+    <Compile Include="MvbaCore\CodeQuery\MemberInfoExtensions.cs" />
+    <Compile Include="MvbaCore\CodeQuery\PropertyInfoExtensions.cs" />
+    <Compile Include="MvbaCore\CodeQuery\TypeExtensions.cs" />
+    <Compile Include="MvbaCore\DefaultKeyAttribute.cs" />
+    <Compile Include="MvbaCore\INamedConstant.cs" />
+    <Compile Include="MvbaCore\NamedConstant.cs" />
+    <Compile Include="MvbaCore\NamedConstantExtensions.cs" />
+    <Compile Include="OrderedReconciler.cs" />
+    <Compile Include="OrderedRecordReconciler.cs" />
     <Compile Include="ParseException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReconciliationResult.cs" />
+    <Compile Include="ReconciliationStatus.cs" />
     <Compile Include="Record.cs" />
+    <Compile Include="RecordComparer.cs" />
+    <Compile Include="RecordReconciler.cs" />
     <Compile Include="StreamTokenizer.cs" />
+    <Compile Include="StringFieldComparer.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="Trie.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FastReflection">
+      <HintPath>..\..\lib\FastReflection\FastReflection.dll</HintPath>
+    </Reference>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\..\mvba-suit\src\SuitSystem.Core\bin\Debug\JetBrains.Annotations.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
