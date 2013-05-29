@@ -31,6 +31,16 @@ namespace EtlGate.Core
 			get { return _headings.Keys.ToList(); }
 		}
 
+		public string this[string name]
+		{
+			get { return GetField(name); }
+		}
+
+		public string this[int zeroBasedIndex]
+		{
+			get { return GetField(zeroBasedIndex); }
+		}
+
 		public string GetField(string name)
 		{
 			return GetField(GetFieldIndex(name));
