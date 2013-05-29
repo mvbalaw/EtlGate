@@ -58,39 +58,31 @@ namespace EtlGate.Core
 			}
 
 			_doPushBack = AllowPushBack;
-			var data = new StringBuilder();
 			using (var reader = new StreamReader(stream))
 			{
 				var next = new char[_readBufferSize];
 				var count = reader.Read(next, 0, _readBufferSize);
 				while (count > 0)
 				{
-					foreach (var token in TokenizeArray(next, count, lookup, data))
+					foreach (var token in TokenizeArray(next, count, lookup))
 					{
 						yield return token;
 					}
+					next = new char[_readBufferSize];
 					count = reader.Read(next, 0, _readBufferSize);
 				}
 			}
 
 			do
 			{
-				while (data.Length > 0 || _pushBack != null)
+				while (_pushBack != null)
 				{
-					if (data.Length > 0)
+					var copy = _pushBack;
+					_pushBack = null;
+					_doPushBack = AllowPushBack;
+					foreach (var token in TokenizeArray(copy, copy.Length, lookup))
 					{
-						yield return new DataToken(data.ToString());
-						data.Length = 0;
-					}
-					if (_pushBack != null)
-					{
-						var copy = _pushBack;
-						_pushBack = null;
-						_doPushBack = AllowPushBack;
-						foreach (var token in TokenizeArray(copy, copy.Length, lookup, data))
-						{
-							yield return token;
-						}
+						yield return token;
 					}
 				}
 				yield return new EndOfStreamToken();
@@ -125,7 +117,7 @@ namespace EtlGate.Core
 						var node = trie.Get(token.Value[0]);
 						if (node == null)
 						{
-							yield return new DataToken(token.Value);
+							yield return new DataToken(token);
 						}
 						else
 						{
@@ -144,7 +136,7 @@ namespace EtlGate.Core
 							if (parentNode != null)
 							{
 								var index = specialsBuffer.LastIndexOf(parentNode);
-								yield return new SpecialToken(parentNode.Value);
+								yield return new SpecialToken(parentNode.Value.ToCharArray(), 0, parentNode.Value.Length);
 								Combine(buffer, specialsBuffer, index + 1, specialsBuffer.Count - 1);
 								specialsBuffer.Clear();
 								if (buffer.Length > 0)
@@ -157,7 +149,7 @@ namespace EtlGate.Core
 									node = trie.Get(token.Value[0]);
 									if (node == null)
 									{
-										yield return new DataToken(token.Value);
+										yield return new DataToken(token);
 									}
 									else
 									{
@@ -167,7 +159,7 @@ namespace EtlGate.Core
 								continue;
 							}
 
-							yield return new DataToken(specialsBuffer.First().Key.ToString());
+							yield return new DataToken(new[] { specialsBuffer.First().Key }, 0, 1);
 							Combine(buffer, specialsBuffer, 1, specialsBuffer.Count - 1);
 							specialsBuffer.Clear();
 							buffer.Append(token.Value);
@@ -187,7 +179,7 @@ namespace EtlGate.Core
 					if (parentNode != null)
 					{
 						var index = specialsBuffer.LastIndexOf(parentNode);
-						yield return new SpecialToken(parentNode.Value);
+						yield return new SpecialToken(parentNode.Value.ToCharArray(), 0, parentNode.Value.Length);
 						Combine(buffer, specialsBuffer, index + 1, specialsBuffer.Count - 1);
 						specialsBuffer.Clear();
 						if (buffer.Length > 0)
@@ -206,7 +198,7 @@ namespace EtlGate.Core
 						continue;
 					}
 
-					yield return new DataToken(specialsBuffer.First().Key.ToString());
+					yield return new DataToken(new[] { specialsBuffer.First().Key }, 0, 1);
 					Combine(buffer, specialsBuffer, 1, specialsBuffer.Count - 1);
 					specialsBuffer.Clear();
 					if (token is DataToken)
@@ -259,17 +251,17 @@ namespace EtlGate.Core
 		private void HandlePushBack(ref char[] next, ref int i, ref int count)
 		{
 			_doPushBack = AllowPushBack;
-			if (_pushBack.Length - 1 <= i)
+			var overlap = Math.Min(_pushBack.Length, Math.Min(i + 1, count));
+			var lenOfRemainder = _pushBack.Length - overlap;
+			i -= overlap;
+			if (lenOfRemainder == 0)
 			{
-				i = i - _pushBack.Length;
 				_pushBack = null;
 				return;
 			}
-			var lenOfRemainder = count - 1 - i;
-			var remainderStartIndex = i + 1;
-			var newNext = new char[lenOfRemainder + _pushBack.Length];
-			Array.Copy(_pushBack, newNext, _pushBack.Length);
-			Array.Copy(next, remainderStartIndex, newNext, _pushBack.Length, lenOfRemainder);
+			var newNext = new char[lenOfRemainder + count];
+			Array.Copy(_pushBack, 0, newNext, 0, lenOfRemainder);
+			Array.Copy(next, 0, newNext, lenOfRemainder, count);
 			next = newNext;
 			i = -1;
 			count = newNext.Length;
@@ -278,7 +270,7 @@ namespace EtlGate.Core
 
 		private static void ThrowOnDoublePushBack(char[] chars)
 		{
-			throw new NotImplementedException("Don't push twice.");
+			throw new NotImplementedException("Don't push twice in a row.");
 		}
 
 		private static void ThrowOnPushBack(char[] chars)
@@ -286,34 +278,53 @@ namespace EtlGate.Core
 			throw new NotImplementedException("Push back not supported when tokenizing with string specials.");
 		}
 
-		private IEnumerable<Token> TokenizeArray(char[] next, int count, IList<bool> lookup, StringBuilder data)
+		private IEnumerable<Token> TokenizeArray(char[] next, int count, IList<bool> lookup)
 		{
-			for (var i = 0; i < count; i++)
+			var dataStart = 0;
+			var i = 0;
+			do
 			{
-				var ch = next[i];
-				if (!lookup[ch])
+				for (; i < count; i++)
 				{
-					data.Append(ch);
-					continue;
-				}
-
-				if (data.Length > 0)
-				{
-					yield return new DataToken(data.ToString());
-					data.Length = 0;
-					if (_pushBack != null)
+					var ch = next[i];
+					if (!lookup[ch])
 					{
-						i--;
-						HandlePushBack(ref next, ref i, ref count);
 						continue;
 					}
+
+					if (i - dataStart > 0)
+					{
+						yield return new DataToken(next, dataStart, i - dataStart);
+						if (_pushBack != null)
+						{
+							i--;
+							HandlePushBack(ref next, ref i, ref count);
+							dataStart = i + 1;
+							continue;
+						}
+					}
+					yield return new SpecialToken(next, i, 1);
+					if (_pushBack != null)
+					{
+						HandlePushBack(ref next, ref i, ref count);
+					}
+					dataStart = i + 1;
 				}
-				yield return new SpecialToken(new String(next, i, 1));
-				if (_pushBack != null)
+
+				if (i - dataStart > 0)
 				{
-					HandlePushBack(ref next, ref i, ref count);
+					yield return new DataToken(next, dataStart, i - dataStart);
+					if (_pushBack != null)
+					{
+						HandlePushBack(ref next, ref i, ref count);
+						if (i < 0)
+						{
+							i = 0;
+						}
+					}
+					dataStart = i;
 				}
-			}
+			} while (dataStart < count);
 		}
 	}
 }

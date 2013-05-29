@@ -32,43 +32,13 @@ namespace EtlGate.Core.Tests
 			public void FuzzTestIt()
 			{
 				const string characters = "abcde";
-				var specials = new[] { 'a' };
 				var random = new Random();
 
 				for (var i = 0; i < 10000; i++)
 				{
 					var input = Enumerable.Range(0, 100).Select(x => characters[random.Next(characters.Length)]).ToArray();
 					var commands = Enumerable.Range(0, 1000).Select(x => "hsp"[random.Next(3)]).ToArray();
-					var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-					var saved = new StringBuilder();
-					var holding = new StringBuilder();
-					var command = 0;
-					foreach (var token in _tokenizer.Tokenize(memoryStream, specials))
-					{
-						if (token is DataToken)
-						{
-							token.Value.IndexOfAny(specials).ShouldBeEqualTo(-1);
-						}
-						switch (commands[command++])
-						{
-							case 'h': // hold
-								holding.Append(token.Value);
-								break;
-							case 's': // save
-								saved.Append(holding);
-								holding.Length = 0;
-								holding.Append(token.Value);
-								break;
-							case 'p': // pushback
-								holding.Append(token.Value);
-								_tokenizer.PushBack(holding.ToString().ToCharArray());
-								holding.Length = 0;
-								break;
-						}
-					}
-					saved.Append(holding);
-					var expected = new String(input);
-					saved.ToString().ShouldBeEqualTo(expected);
+					Check(input, commands);
 				}
 			}
 
@@ -91,40 +61,9 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
-			public void Given_a_stream_containing__abbbbbbbbbbb__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbbbb_data()
+			public void Given_a_stream_containing__abbbbbbbbbbb__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbb_data__bb_data()
 			{
 				const string input = "abbbbbbbbbbb";
-				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-				var result = new List<Token>();
-				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
-				{
-					if (tokenCount == 1)
-					{
-						_tokenizer.PushBack(token.Value.ToCharArray());
-					}
-					else
-					{
-						result.Add(token);
-					}
-					tokenCount++;
-				}
-				result.Count.ShouldBeEqualTo(3);
-				var first = result[0];
-				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
-				first.Value.ShouldBeEqualTo("a");
-
-				var second = result[1];
-				second.GetType().ShouldBeEqualTo(typeof(DataToken));
-				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
-
-				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
-			}
-
-			[Test]
-			public void Given_a_stream_containing__abbbbbbbbbbba__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbbbb_data__a_special()
-			{
-				const string input = "abbbbbbbbbbba";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
@@ -147,11 +86,50 @@ namespace EtlGate.Core.Tests
 
 				var second = result[1];
 				second.GetType().ShouldBeEqualTo(typeof(DataToken));
-				second.Value.ShouldBeEqualTo("bbbbbbbbbbb");
+				second.Value.ShouldBeEqualTo("bbbbbbbbb");
 
 				var third = result[2];
-				third.GetType().ShouldBeEqualTo(typeof(SpecialToken));
-				third.Value.ShouldBeEqualTo("a");
+				third.GetType().ShouldBeEqualTo(typeof(DataToken));
+				third.Value.ShouldBeEqualTo("bb");
+
+				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
+			}
+
+			[Test]
+			public void Given_a_stream_containing__abbbbbbbbbbba__and_specials__a__and_pushback_is_called_on_the_2nd_token__should_return__a_special__bbbbbbbbb_data__bb_data__a_special()
+			{
+				const string input = "abbbbbbbbbbba";
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+				var result = new List<Token>();
+				var tokenCount = 0;
+				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				{
+					if (tokenCount == 1)
+					{
+						_tokenizer.PushBack(token.Value.ToCharArray());
+					}
+					else
+					{
+						result.Add(token);
+					}
+					tokenCount++;
+				}
+				result.Count.ShouldBeEqualTo(5);
+				var first = result[0];
+				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				first.Value.ShouldBeEqualTo("a");
+
+				var second = result[1];
+				second.GetType().ShouldBeEqualTo(typeof(DataToken));
+				second.Value.ShouldBeEqualTo("bbbbbbbbb");
+
+				var third = result[2];
+				third.GetType().ShouldBeEqualTo(typeof(DataToken));
+				third.Value.ShouldBeEqualTo("bb");
+
+				var fourth = result[3];
+				fourth.GetType().ShouldBeEqualTo(typeof(SpecialToken));
+				fourth.Value.ShouldBeEqualTo("a");
 
 				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 			}
@@ -371,6 +349,22 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
+			public void Given_a_stream_containing__eaebaebcddcacbb__and_commands__hpshpspssshhpppshpsphsh__should_capture_the_entire_stream()
+			{
+				const string input = "eaebaebcddcacbb";
+				const string commands = "phshhsphphshshppss";
+				Check(input.ToCharArray(), commands.ToCharArray());
+			}
+
+			[Test]
+			public void Given_a_stream_containing__ecdeebecadbcaeecded__and_commands__hpshpspssshhpppshpsphsh__should_capture_the_entire_stream()
+			{
+				const string input = "ecdeebecadbcaeecded";
+				const string commands = "hpshpspssshhpppshpsphshs";
+				Check(input.ToCharArray(), commands.ToCharArray());
+			}
+
+			[Test]
 			public void Given_a_stream_that_contains_only_1_special__should_return_the_entire_stream_as_a_special_data_token()
 			{
 				const string input = "h";
@@ -407,6 +401,59 @@ namespace EtlGate.Core.Tests
 				result.Count.ShouldBeEqualTo(1);
 
 				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
+			}
+
+			private void Check(char[] input, char[] commands)
+			{
+				var specials = new[] { 'a' };
+				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
+
+				var saved = new StringBuilder();
+				var holding = new StringBuilder();
+				var commandIndex = 0;
+				try
+				{
+					foreach (var token in _tokenizer.Tokenize(memoryStream, specials))
+					{
+						if (token is DataToken)
+						{
+							token.Value.IndexOfAny(specials).ShouldBeEqualTo(-1);
+						}
+						switch (commands[commandIndex++])
+						{
+							case 'h': // hold
+								holding.Append(token.Value);
+								break;
+							case 's': // save
+								if (holding.Length > 0)
+								{
+									saved.Append(holding);
+									holding.Length = 0;
+								}
+								holding.Append(token.Value);
+								if (saved.Length > 0)
+								{
+									saved.ToString().ShouldBeEqualTo(new string(input).Substring(0, saved.Length));
+								}
+								break;
+							case 'p': // pushback
+								holding.Append(token.Value);
+								_tokenizer.PushBack(holding);
+								holding.Length = 0;
+								break;
+						}
+					}
+				}
+				catch (Exception exception)
+				{
+					Console.WriteLine("input: " + new string(input).Substring(0, Math.Min(input.Length, saved.Length + holding.Length + 10)));
+					Console.WriteLine("commands: " + new String(commands).Substring(0, Math.Min(commands.Length, commandIndex + 10)));
+					Console.WriteLine(exception);
+					Assert.Fail(exception.Message);
+				}
+				saved.Append(holding);
+				var expected = new String(input);
+				saved.ToString().ShouldBeEqualTo(expected);
 			}
 		}
 

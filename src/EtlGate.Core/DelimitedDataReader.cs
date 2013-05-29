@@ -119,27 +119,26 @@ namespace EtlGate.Core
 		{
 			if (token is SpecialToken)
 			{
-				switch (token.Value)
+				var ch = token.First;
+				if (token.Length.Equals(1) && ch.Equals('"'))
 				{
-					case "\"":
-						parseContext.Capture.Append('"');
-						parseContext.Handle = ReadQuotedField;
-						break;
-					default:
-						var ch = token.Value[0];
-						var fieldSeparator = parseContext.FieldSeparator;
-						if (fieldSeparator.Length > 0 && ch.Equals(fieldSeparator[0]))
-						{
-							return StartCollectingFieldSeparator(token, fieldValues, parseContext);
-						}
-						var recordSeparator = parseContext.RecordSeparator;
-						if (recordSeparator.Length > 0 && ch.Equals(recordSeparator[0]))
-						{
-							return StartCollectingRecordSeparator(token, fieldValues, parseContext);
-						}
+					parseContext.Capture.Append(ch);
+					parseContext.Handle = ReadQuotedField;
+				}
+				else
+				{
+					var fieldSeparator = parseContext.FieldSeparator;
+					if (fieldSeparator.Length > 0 && ch.Equals(fieldSeparator[0]))
+					{
+						return StartCollectingFieldSeparator(token, fieldValues, parseContext);
+					}
+					var recordSeparator = parseContext.RecordSeparator;
+					if (recordSeparator.Length > 0 && ch.Equals(recordSeparator[0]))
+					{
+						return StartCollectingRecordSeparator(token, fieldValues, parseContext);
+					}
 
-						ThrowUnescapedQuoteException(parseContext);
-						break;
+					ThrowUnescapedQuoteException(parseContext);
 				}
 			}
 			else if (token is DataToken)
@@ -295,7 +294,7 @@ namespace EtlGate.Core
 
 		private bool ReadQuotedField(Token token, List<string> fieldValues, ParseContext parseContext)
 		{
-			if (!(token is SpecialToken) || token.Value[0] != '"')
+			if (!(token is SpecialToken) || !token.First.Equals('"'))
 			{
 				parseContext.Capture.Append(token.Value);
 			}
