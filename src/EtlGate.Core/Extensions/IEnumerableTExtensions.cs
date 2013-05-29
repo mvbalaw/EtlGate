@@ -1,10 +1,14 @@
 ﻿using System.Collections.Generic;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core.Extensions
 {
 	public static class IEnumerableTExtensions
 	{
-		public static IEnumerable<LinkedListNode<T>> ToLinkedList<T>(this IEnumerable<T> items)
+		[NotNull]
+		[Pure]
+		public static IEnumerable<LinkedListNode<T>> ToLinkedList<T>([NotNull] this IEnumerable<T> items)
 		{
 			var list = new LinkedList<T>();
 			LinkedListNode<T> current = null;

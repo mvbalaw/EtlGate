@@ -63,7 +63,9 @@ namespace EtlGate.Core.Tests
 			public void Given_a_null_stream__should_throw_an_exception()
 			{
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
+// ReSharper disable AssignNullToNotNullAttribute
 				_reader.ReadFrom(null).ToList();
+// ReSharper restore AssignNullToNotNullAttribute
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
 			}
 
@@ -266,7 +268,9 @@ namespace EtlGate.Core.Tests
 						}
 						var actualValue = actualRecord.GetField(fieldIndex);
 						var expectedValue = expectedRecord.GetField(fieldIndex);
+						actualValue.ShouldNotBeNull();
 						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						expectedValue.ShouldNotBeNull();
 						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
 						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + recordNumber) + " field " + fieldIndex + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}
@@ -279,7 +283,9 @@ namespace EtlGate.Core.Tests
 						}
 						var actualValue = actualRecord.GetField(headingFieldName);
 						var expectedValue = expectedRecord.GetField(headingFieldName);
+						actualValue.ShouldNotBeNull();
 						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						expectedValue.ShouldNotBeNull();
 						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
 						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + recordNumber) + " " + headingFieldName + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}
@@ -1302,7 +1308,9 @@ namespace EtlGate.Core.Tests
 							Assert.Fail("Row " + (1 + recordNumber) + " does not contain field number " + fieldIndex);
 						}
 						var actualValue = actualRecord.GetField(fieldIndex);
+						actualValue.ShouldNotBeNull();
 						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						record.ShouldNotBeNull();
 						var expectedValue = record.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
 						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + recordNumber) + " field " + fieldIndex + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}
@@ -1315,7 +1323,9 @@ namespace EtlGate.Core.Tests
 						}
 						var actualValue = actualRecord.GetField(headingFieldName);
 						var expectedValue = expectedRecord.GetField(headingFieldName);
+						actualValue.ShouldNotBeNull();
 						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+						expectedValue.ShouldNotBeNull();
 						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
 						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + recordNumber) + " " + headingFieldName + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}

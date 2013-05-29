@@ -3,13 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core.MvbaCore
 {
 	[Serializable]
 	public class NamedConstant : INamedConstant
 	{
 		/// <summary>
-		///   Use Add to set
+		///     Use Add to set
 		/// </summary>
 		public string Key { get; internal set; }
 	}
@@ -24,7 +26,7 @@ namespace EtlGate.Core.MvbaCore
 		private static readonly Dictionary<string, T> NamedConstants = new Dictionary<string, T>();
 // ReSharper restore StaticFieldInGenericType
 
-		protected void Add(string key, T item)
+		protected void Add([NotNull] string key, [NotNull] T item)
 		{
 			Key = key;
 			NamedConstants.Add(key.ToLower(), item);
@@ -32,6 +34,8 @@ namespace EtlGate.Core.MvbaCore
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
+		[NotNull]
+		[Pure]
 		public static IEnumerable<T> GetAll()
 // ReSharper restore UnusedMember.Global
 // ReSharper restore MemberCanBePrivate.Global
@@ -41,7 +45,9 @@ namespace EtlGate.Core.MvbaCore
 		}
 
 // ReSharper disable MemberCanBePrivate.Global
-		protected static T Get(string key)
+		[CanBeNull]
+		[Pure]
+		protected static T Get([CanBeNull] string key)
 // ReSharper restore MemberCanBePrivate.Global
 		{
 			if (key == null)
@@ -53,7 +59,8 @@ namespace EtlGate.Core.MvbaCore
 			return t;
 		}
 
-		public static bool operator ==(NamedConstant<T> a, NamedConstant<T> b)
+		[Pure]
+		public static bool operator ==([CanBeNull] NamedConstant<T> a, [CanBeNull] NamedConstant<T> b)
 		{
 			if (ReferenceEquals(a, b))
 			{
@@ -68,17 +75,22 @@ namespace EtlGate.Core.MvbaCore
 			return a.Equals(b);
 		}
 
-		public static bool operator !=(NamedConstant<T> a, NamedConstant<T> b)
+		[Pure]
+		public static bool operator !=([CanBeNull] NamedConstant<T> a, [CanBeNull] NamedConstant<T> b)
 		{
 			return !(a == b);
 		}
 
-		public static T GetFor(string key)
+		[CanBeNull]
+		[Pure]
+		public static T GetFor([CanBeNull] string key)
 		{
 			EnsureValues();
 			return Get(key);
 		}
 
+		[CanBeNull]
+		[Pure]
 		public static T GetDefault()
 		{
 			EnsureValues();

@@ -1,14 +1,16 @@
-﻿namespace EtlGate.Core
+﻿using JetBrains.Annotations;
+
+namespace EtlGate.Core
 {
 	public class ReconciliationResult<T>
 	{
-		public ReconciliationResult(T item, ReconciliationStatus state)
+		public ReconciliationResult(T item, [NotNull] ReconciliationStatus state)
 		{
 			Item = item;
 			Status = state;
 		}
 
-		public T Item { get; private set; }
-		public ReconciliationStatus Status { get; private set; }
+		public T Item { [Pure] get; private set; }
+		public ReconciliationStatus Status { [Pure] get; private set; }
 	}
 }

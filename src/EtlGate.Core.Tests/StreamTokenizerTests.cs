@@ -47,7 +47,9 @@ namespace EtlGate.Core.Tests
 			public void Given_a_null_array_of_special_characters__should_throw_an_argument_exception()
 			{
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
+// ReSharper disable AssignNullToNotNullAttribute
 				_tokenizer.Tokenize(new MemoryStream(), (char[])null).ToList();
+// ReSharper restore AssignNullToNotNullAttribute
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
 			}
 
@@ -56,7 +58,9 @@ namespace EtlGate.Core.Tests
 			public void Given_a_null_stream__should_throw_an_argument_exception()
 			{
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
+// ReSharper disable AssignNullToNotNullAttribute
 				_tokenizer.Tokenize(null, new char[] { }).ToList();
+// ReSharper restore AssignNullToNotNullAttribute
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
 			}
 
@@ -506,7 +510,9 @@ namespace EtlGate.Core.Tests
 			public void Given_a_null_array_of_special_strings__should_throw_an_argument_exception()
 			{
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
+// ReSharper disable AssignNullToNotNullAttribute
 				_tokenizer.Tokenize(new MemoryStream(), (string[])null).ToList();
+// ReSharper restore AssignNullToNotNullAttribute
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
 			}
 

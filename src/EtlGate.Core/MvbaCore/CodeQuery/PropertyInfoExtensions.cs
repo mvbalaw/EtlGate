@@ -22,35 +22,41 @@ namespace CodeQuery
 	internal static class PropertyInfoExtensions
 	{
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<Attribute> CustomAttributes([NotNull] this PropertyInfo input)
 		{
 			return input.GetCustomAttributes(true).Cast<Attribute>();
 		}
 
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<T> CustomAttributesOfType<T>([NotNull] this PropertyInfo input) where T : Attribute
 		{
 			return ((MemberInfo)input).CustomAttributesOfType<T>();
 		}
 
+		[Pure]
 		internal static bool HasAttributeOfType<TAttributeType>([NotNull] this PropertyInfo input) where TAttributeType : Attribute
 		{
 			return input.CustomAttributesOfType<TAttributeType>().Any();
 		}
 
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<PropertyInfo> ThatHaveAGetter([NotNull] this IEnumerable<PropertyInfo> input)
 		{
 			return input.Where(x => x.CanRead);
 		}
 
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<PropertyInfo> ThatHaveASetter([NotNull] this IEnumerable<PropertyInfo> input)
 		{
 			return input.Where(x => x.CanWrite);
 		}
 
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<PropertyInfo> WithAttributeOfType<TAttributeType>([NotNull] this IEnumerable<PropertyInfo> input) where TAttributeType : Attribute
 		{
 			return input.Where(x => x.HasAttributeOfType<TAttributeType>());

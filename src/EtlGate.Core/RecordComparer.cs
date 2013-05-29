@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public interface IRecordKeyComparer : IComparer<Record>
@@ -11,12 +13,13 @@ namespace EtlGate.Core
 	{
 		private readonly IFieldComparer[] _fieldComparersInOrder;
 
-		public RecordKeyComparer(params IFieldComparer[] fieldComparersInOrder)
+		public RecordKeyComparer([NotNull] params IFieldComparer[] fieldComparersInOrder)
 		{
 			_fieldComparersInOrder = fieldComparersInOrder;
 		}
 
-		public int Compare(Record record1, Record record2)
+		[Pure]
+		public int Compare([NotNull] Record record1, [NotNull] Record record2)
 		{
 			var result = _fieldComparersInOrder
 				.Select(x => x.Compare(record1.GetField(x.FieldName), record2.GetField(x.FieldName)))

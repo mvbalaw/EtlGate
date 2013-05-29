@@ -22,6 +22,7 @@ namespace CodeQuery
 	internal static class MemberInfoExtensions
 	{
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<T> CustomAttributesOfType<T>([NotNull] this MemberInfo input) where T : Attribute
 		{
 			return input.GetCustomAttributes(typeof(T), true).Cast<T>();

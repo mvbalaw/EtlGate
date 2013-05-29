@@ -4,18 +4,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public interface IDelimitedDataReader
 	{
-		IEnumerable<Record> ReadFrom(Stream stream, string fieldSeparator = ",", string recordSeparator = "\r\n", bool supportQuotedFields = true, bool hasHeaderRow = false);
+		[NotNull]
+		IEnumerable<Record> ReadFrom([NotNull] Stream stream, [CanBeNull] string fieldSeparator = ",", [CanBeNull] string recordSeparator = "\r\n", bool supportQuotedFields = true, bool hasHeaderRow = false);
 	}
 
 	public class DelimitedDataReader : IDelimitedDataReader
 	{
 		private readonly IStreamTokenizer _streamTokenizer;
 
-		public DelimitedDataReader(IStreamTokenizer streamTokenizer)
+		public DelimitedDataReader([NotNull] IStreamTokenizer streamTokenizer)
 		{
 			_streamTokenizer = streamTokenizer;
 		}

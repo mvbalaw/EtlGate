@@ -24,6 +24,7 @@ namespace EtlGate.Core.MvbaCore
 		private static readonly HashSet<Type> NoDefaults = new HashSet<Type>();
 
 		[CanBeNull]
+		[Pure]
 		public static T DefaultValue<T>() where T : NamedConstant<T>
 		{
 			var type = typeof(T);
@@ -71,6 +72,7 @@ namespace EtlGate.Core.MvbaCore
 		}
 
 		[NotNull]
+		[Pure]
 		public static T OrDefault<T>([CanBeNull] this T value) where T : NamedConstant<T>
 		{
 			if (value != null)

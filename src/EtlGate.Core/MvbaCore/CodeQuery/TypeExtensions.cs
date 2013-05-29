@@ -9,13 +9,16 @@
 //  * **************************************************************************
 using System;
 
+using JetBrains.Annotations;
+
 // ReSharper disable CheckNamespace
 namespace CodeQuery
 // ReSharper restore CheckNamespace
 {
 	internal static class TypeExtensions
 	{
-		internal static bool IsGenericAssignableFrom(this Type target, Type source)
+		[Pure]
+		internal static bool IsGenericAssignableFrom([NotNull] this Type target, [NotNull] Type source)
 		{
 			if (!target.IsGenericType)
 			{

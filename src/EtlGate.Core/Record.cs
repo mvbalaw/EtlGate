@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public class Record
@@ -11,12 +13,12 @@ namespace EtlGate.Core
 		private readonly IList<string> _fields;
 		private readonly IDictionary<string, int> _headings;
 
-		public Record(params string[] fields)
+		public Record([NotNull] params string[] fields)
 			: this(fields, new Dictionary<string, int>())
 		{
 		}
 
-		public Record(IList<string> fields, IDictionary<string, int> headings)
+		public Record([NotNull] IList<string> fields, [NotNull] IDictionary<string, int> headings)
 		{
 			_fields = fields;
 			_headings = headings;
@@ -24,28 +26,34 @@ namespace EtlGate.Core
 
 		public int FieldCount
 		{
-			get { return _fields.Count; }
+			[Pure] get { return _fields.Count; }
 		}
 		public IList<string> HeadingFieldNames
 		{
-			get { return _headings.Keys.ToList(); }
+			[Pure] get { return _headings.Keys.ToList(); }
 		}
 
-		public string this[string name]
+		[CanBeNull]
+		public string this[[NotNull] string name]
 		{
-			get { return GetField(name); }
+			[Pure] get { return GetField(name); }
 		}
 
+		[CanBeNull]
 		public string this[int zeroBasedIndex]
 		{
-			get { return GetField(zeroBasedIndex); }
+			[Pure] get { return GetField(zeroBasedIndex); }
 		}
 
-		public string GetField(string name)
+		[CanBeNull]
+		[Pure]
+		public string GetField([NotNull] string name)
 		{
 			return GetField(GetFieldIndex(name));
 		}
 
+		[CanBeNull]
+		[Pure]
 		public string GetField(int zeroBasedIndex)
 		{
 			return HasField(zeroBasedIndex) ? _fields[zeroBasedIndex] : null;
@@ -61,6 +69,7 @@ namespace EtlGate.Core
 			return zeroBasedIndex;
 		}
 
+		[Pure]
 		public bool HasField(int zeroBasedIndex)
 		{
 			if (zeroBasedIndex < 0)
@@ -70,7 +79,8 @@ namespace EtlGate.Core
 			return zeroBasedIndex < _fields.Count;
 		}
 
-		public bool HasField(string name)
+		[Pure]
+		public bool HasField([NotNull] string name)
 		{
 			var zeroBasedIndex = GetFieldIndex(name);
 			return HasField(zeroBasedIndex);

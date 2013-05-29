@@ -1,12 +1,14 @@
 ﻿using System.Collections.Generic;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public class Trie
 	{
 		private readonly IDictionary<char, TrieNode> _nodes = new Dictionary<char, TrieNode>();
 
-		public void Add(string value)
+		public void Add([NotNull] string value)
 		{
 			TrieNode node;
 			if (!_nodes.TryGetValue(value[0], out node))
@@ -28,6 +30,8 @@ namespace EtlGate.Core
 			}
 		}
 
+		[CanBeNull]
+		[Pure]
 		public TrieNode Get(char ch)
 		{
 			TrieNode node;
@@ -40,7 +44,7 @@ namespace EtlGate.Core
 	{
 		private readonly IDictionary<char, TrieNode> _nodes = new Dictionary<char, TrieNode>();
 
-		public TrieNode(char key, string value, TrieNode parent)
+		public TrieNode(char key, [CanBeNull] string value, [CanBeNull] TrieNode parent)
 		{
 			Value = value;
 			Parent = parent;
@@ -49,13 +53,16 @@ namespace EtlGate.Core
 
 		public bool IsEnding
 		{
-			get { return Value != null; }
+			[Pure] get { return Value != null; }
 		}
-		public char Key { get; private set; }
-		public TrieNode Parent { get; private set; }
-		public string Value { get; internal set; }
+		public char Key { [Pure] get; private set; }
+		[CanBeNull]
+		public TrieNode Parent { [Pure] get; private set; }
+		[CanBeNull]
+		public string Value { [Pure] get; internal set; }
 
-		public TrieNode Add(char ch, string value)
+		[NotNull]
+		public TrieNode Add(char ch, [CanBeNull] string value)
 		{
 			TrieNode node;
 			if (!_nodes.TryGetValue(ch, out node))
@@ -73,6 +80,8 @@ namespace EtlGate.Core
 			return node;
 		}
 
+		[CanBeNull]
+		[Pure]
 		public TrieNode Get(char ch)
 		{
 			TrieNode node;

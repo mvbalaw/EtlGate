@@ -1,5 +1,7 @@
 ﻿using System;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public abstract class Token
@@ -9,14 +11,14 @@ namespace EtlGate.Core
 		private readonly int _start;
 		private string _value;
 
-		protected Token(char[] source, int start, int length)
+		protected Token([NotNull] char[] source, int start, int length)
 		{
 			_source = source;
 			_start = start;
 			_length = length;
 		}
 
-		protected Token(Token token)
+		protected Token([NotNull] Token token)
 		{
 			_source = token._source;
 			_start = token._start;
@@ -24,7 +26,7 @@ namespace EtlGate.Core
 			_value = token._value;
 		}
 
-		protected Token(string source)
+		protected Token([NotNull] string source)
 		{
 			_source = new[] { source[0] };
 			_start = 0;
@@ -34,31 +36,32 @@ namespace EtlGate.Core
 
 		public char First
 		{
-			get { return _source[_start]; }
+			[Pure] get { return _source[_start]; }
 		}
 		public int Length
 		{
-			get { return _length; }
+			[Pure] get { return _length; }
 		}
+		[NotNull]
 		public string Value
 		{
-			get { return _value ?? (_value = new String(_source, _start, _length)); }
+			[Pure] get { return _value ?? (_value = new String(_source, _start, _length)); }
 		}
 	}
 
 	public class DataToken : Token
 	{
-		public DataToken(char[] source, int start, int length)
+		public DataToken([NotNull] char[] source, int start, int length)
 			: base(source, start, length)
 		{
 		}
 
-		public DataToken(Token token)
+		public DataToken([NotNull] Token token)
 			: base(token)
 		{
 		}
 
-		public DataToken(string source)
+		public DataToken([NotNull] string source)
 			: base(source)
 		{
 		}
@@ -66,12 +69,12 @@ namespace EtlGate.Core
 
 	public class SpecialToken : Token
 	{
-		public SpecialToken(char[] source, int start, int length)
+		public SpecialToken([NotNull] char[] source, int start, int length)
 			: base(source, start, length)
 		{
 		}
 
-		public SpecialToken(string source)
+		public SpecialToken([NotNull] string source)
 			: base(source)
 		{
 		}

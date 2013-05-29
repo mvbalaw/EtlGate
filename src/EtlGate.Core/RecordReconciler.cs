@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Linq;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public interface IRecordReconciler
 	{
-		ReconciliationStatus ReconcileRecords(Record left, Record right, IRecordKeyComparer recordKeyComparer);
+		[NotNull]
+		ReconciliationStatus ReconcileRecords([NotNull] Record left, [NotNull] Record right, [NotNull] IRecordKeyComparer recordKeyComparer);
 	}
 
 	public class RecordReconciler : IRecordReconciler

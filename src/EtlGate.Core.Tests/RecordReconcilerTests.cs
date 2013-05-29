@@ -41,7 +41,7 @@ namespace EtlGate.Core.Tests
 				result.ShouldBeEqualTo(ReconciliationStatus.Added);
 			}
 
-			private ReconciliationStatus CompareResults(Record firstRecord, Record secondRecord)
+			private static ReconciliationStatus CompareResults(Record firstRecord, Record secondRecord)
 			{
 				var dataLoadRecordComparer = new RecordKeyComparer(new StringFieldComparer("ACCOUNT_NUMBER"), new StringFieldComparer("TAX_YEAR"), new StringFieldComparer("SUBJURISDICTION_CODE"), new DateFieldComparer("DELINQUENCY_DATE"));
 				var result = new RecordReconciler().ReconcileRecords(firstRecord, secondRecord, dataLoadRecordComparer);
@@ -240,7 +240,7 @@ namespace EtlGate.Core.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Invalid date value in DelinquencyDate for first row")]
+			[ExpectedException(typeof(InvalidOperationException), ExpectedMessage = DateFieldComparer.ErrorField1HasInvalidDateValue)]
 			public void Given_two_Records_with_first_having_invalid_DelinquencyDate_field__should_throw_InvalidOperationException()
 			{
 				var first = new Dictionary<string, string> { { "ACCOUNT_NUMBER", "1" }, { "TAX_YEAR", "2013" }, { "SUBJURISDICTION_CODE", "999" }, { "DELINQUENCY_DATE", "Invalid date" },
@@ -257,7 +257,7 @@ namespace EtlGate.Core.Tests
 
 
 			[Test]
-			[ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Invalid date value in DelinquencyDate for second row")]
+			[ExpectedException(typeof(InvalidOperationException), ExpectedMessage = DateFieldComparer.ErrorField2HasInvalidDateValue)]
 			public void Given_two_Records_with_second_having_invalid_DelinquencyDate_field__should_throw_InvalidOperationException()
 			{
 				var first = new Dictionary<string, string> { { "ACCOUNT_NUMBER", "1" }, { "TAX_YEAR", "2013" }, { "SUBJURISDICTION_CODE", "999" }, { "DELINQUENCY_DATE", "02/01/2014" },

@@ -1,14 +1,18 @@
-﻿namespace EtlGate.Core
+﻿using JetBrains.Annotations;
+
+namespace EtlGate.Core
 {
 	public class StringFieldComparer : IFieldComparer
 	{
-		public StringFieldComparer(string fieldName)
+		public StringFieldComparer([NotNull] string fieldName)
 		{
 			FieldName = fieldName;
 		}
 
-		public string FieldName { get; private set; }
-		public int Compare(string field1Value, string field2Value)
+		public string FieldName { [Pure] get; private set; }
+
+		[Pure]
+		public int Compare([NotNull] string field1Value, [NotNull] string field2Value)
 		{
 			return string.CompareOrdinal(field1Value, field2Value);
 		}

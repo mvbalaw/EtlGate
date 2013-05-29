@@ -22,23 +22,27 @@ namespace CodeQuery
 	internal static class FieldInfoExtensions
 	{
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<T> CustomAttributesOfType<T>([NotNull] this FieldInfo input) where T : Attribute
 		{
 			return ((MemberInfo)input).CustomAttributesOfType<T>();
 		}
 
+		[Pure]
 		internal static bool HasAttributeOfType<TAttributeType>([NotNull] this FieldInfo input) where TAttributeType : Attribute
 		{
 			return input.CustomAttributesOfType<TAttributeType>().Any();
 		}
 
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<FieldInfo> ThatAreStatic([NotNull] this IEnumerable<FieldInfo> items)
 		{
 			return items.Where(x => x.IsStatic);
 		}
 
 		[NotNull]
+		[Pure]
 		internal static IEnumerable<FieldInfo> WithAttributeOfType<TAttributeType>([NotNull] this IEnumerable<FieldInfo> input) where TAttributeType : Attribute
 		{
 			return input.Where(x => x.HasAttributeOfType<TAttributeType>());

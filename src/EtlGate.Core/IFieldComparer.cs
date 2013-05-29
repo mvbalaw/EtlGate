@@ -1,9 +1,12 @@
 ﻿using System.Collections.Generic;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
-	public interface IFieldComparer: IComparer<string> // todo -- move these to EtlGate and add IntFieldComparer, BoolFieldComparer
+	public interface IFieldComparer : IComparer<string> // todo -- add IntFieldComparer, BoolFieldComparer
 	{
-		string FieldName { get; }
+		[NotNull]
+		string FieldName { [Pure] get; }
 	}
 }

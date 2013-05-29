@@ -1,12 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using JetBrains.Annotations;
+
 namespace EtlGate.Core
 {
 	public class OrderedReconciler<T>
 	{
 		public const string ErrorNotSortedMessage = "Enumerable must be sorted on key";
-		public IEnumerable<ReconciliationResult<T>> Reconcile(IEnumerable<T> left, IEnumerable<T> right, Func<T, T, ReconciliationStatus> reconcileItems)
+
+		private static void CheckOrder(Func<T, T, ReconciliationStatus> reconcileItems, T previousItem, T currentItem)
+		{
+			var reconciliationStatus = reconcileItems(previousItem, currentItem);
+			if (reconciliationStatus == ReconciliationStatus.Added)
+			{
+				throw new ArgumentException(ErrorNotSortedMessage);
+			}
+		}
+
+		[NotNull]
+		public IEnumerable<ReconciliationResult<T>> Reconcile([NotNull] IEnumerable<T> left, [NotNull] IEnumerable<T> right, [NotNull] Func<T, T, ReconciliationStatus> reconcileItems)
 		{
 			if (left == null)
 			{
@@ -23,8 +36,8 @@ namespace EtlGate.Core
 			var moreOnLeft = leftEnumerator.MoveNext();
 			var moreOnRight = rightEnumerator.MoveNext();
 
-			T previousLeft = leftEnumerator.Current;
-			T previousRight = rightEnumerator.Current;
+			var previousLeft = leftEnumerator.Current;
+			var previousRight = rightEnumerator.Current;
 
 			while (moreOnLeft && moreOnRight)
 			{
@@ -62,15 +75,6 @@ namespace EtlGate.Core
 
 				yield return new ReconciliationResult<T>(rightItem, ReconciliationStatus.Added);
 				moreOnRight = rightEnumerator.MoveNext();
-			}
-		}
-
-		private static void CheckOrder(Func<T, T, ReconciliationStatus> reconcileItems, T previousItem, T currentItem)
-		{
-			var reconciliationStatus = reconcileItems(previousItem, currentItem);
-			if (reconciliationStatus == ReconciliationStatus.Added)
-			{
-				throw new ArgumentException(ErrorNotSortedMessage);
 			}
 		}
 	}

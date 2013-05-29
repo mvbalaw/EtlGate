@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+
+using JetBrains.Annotations;
 
 namespace EtlGate.Core
 {
 	public interface IStreamTokenizer
 	{
-		void PushBack(StringBuilder content);
-		void PushBack(string content);
-		void PushBack(char[] chars);
-		IEnumerable<Token> Tokenize(Stream stream, params char[] specials);
-		IEnumerable<Token> Tokenize(Stream stream, params string[] specials);
+		void PushBack([NotNull] StringBuilder content);
+		void PushBack([NotNull] string content);
+		void PushBack([NotNull] char[] chars);
+
+		[NotNull]
+		IEnumerable<Token> Tokenize([NotNull] Stream stream, [NotNull] params char[] specials);
+
+		[NotNull]
+		IEnumerable<Token> Tokenize([NotNull] Stream stream, [NotNull] params string[] specials);
 	}
 
 	public class StreamTokenizer : IStreamTokenizer
@@ -136,7 +143,9 @@ namespace EtlGate.Core
 							if (parentNode != null)
 							{
 								var index = specialsBuffer.LastIndexOf(parentNode);
-								yield return new SpecialToken(parentNode.Value.ToCharArray(), 0, parentNode.Value.Length);
+								var value = parentNode.Value;
+								Debug.Assert(value != null, "value != null");
+								yield return new SpecialToken(value.ToCharArray(), 0, value.Length);
 								Combine(buffer, specialsBuffer, index + 1, specialsBuffer.Count - 1);
 								specialsBuffer.Clear();
 								if (buffer.Length > 0)
@@ -179,7 +188,9 @@ namespace EtlGate.Core
 					if (parentNode != null)
 					{
 						var index = specialsBuffer.LastIndexOf(parentNode);
-						yield return new SpecialToken(parentNode.Value.ToCharArray(), 0, parentNode.Value.Length);
+						var value = parentNode.Value;
+						Debug.Assert(value != null, "value != null");
+						yield return new SpecialToken(value.ToCharArray(), 0, value.Length);
 						Combine(buffer, specialsBuffer, index + 1, specialsBuffer.Count - 1);
 						specialsBuffer.Clear();
 						if (buffer.Length > 0)
