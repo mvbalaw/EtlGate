@@ -67,11 +67,13 @@
     <Compile Include="Trie.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FastReflection">
+    <Reference Include="FastReflection, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\FastReflection\FastReflection.dll</HintPath>
     </Reference>
-    <Reference Include="JetBrains.Annotations">
-      <HintPath>..\..\..\mvba-suit\src\SuitSystem.Core\bin\Debug\JetBrains.Annotations.dll</HintPath>
+    <Reference Include="JetBrains.Annotations, Version=8.0.4.1195, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\JetBrains.Annotations\JetBrains.Annotations.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
