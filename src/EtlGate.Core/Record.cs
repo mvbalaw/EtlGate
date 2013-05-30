@@ -82,6 +82,10 @@ namespace EtlGate.Core
 		[Pure]
 		public bool HasField([NotNull] string name)
 		{
+			if (!_headings.ContainsKey(name))
+			{
+				return false;
+			}
 			var zeroBasedIndex = GetFieldIndex(name);
 			return HasField(zeroBasedIndex);
 		}
