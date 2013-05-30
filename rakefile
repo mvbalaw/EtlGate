@@ -45,7 +45,7 @@ puts
 
 
 desc "** Default **"
-task :default => [:build, :test, :archive] do
+task :default => [:build, :copy_artifacts, :test, :archive] do
   puts "Build Succeeded - time elapsed: #{Time.now - beginning} seconds"
 end
 
@@ -70,6 +70,10 @@ msbuild :build => [:clean, :assemblyinfo] do |msb|
   msb.solution = "src/#{PRODUCT_NAME}.sln"
   msb.verbosity = "quiet"
   sleep 1
+end
+
+desc "Copy build artifacts to the staging folder"
+task :copy_artifacts => [:build] do
   puts "Copying files from bin folders to the build folder (#{settings[:stage]})..."
   copy_output_files "src/#{PRODUCT_NAME}.Core/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", settings[:stage]
   copy_output_files "src/#{PRODUCT_NAME}.Core.Tests/bin/#{COMPILE_TARGET}", "*.{dll,pdb,exe}", settings[:stage]
