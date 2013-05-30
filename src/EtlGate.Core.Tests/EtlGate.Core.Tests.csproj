@@ -42,6 +42,7 @@
     <Compile Include="OrderedReconcilerTests.cs" />
     <Compile Include="OrderedRecordReconcilerTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RecordKeyComparerTests.cs" />
     <Compile Include="RecordReconcilerTests.cs" />
     <Compile Include="RecordTests.cs" />
     <Compile Include="StreamTokenizerTests.cs" />

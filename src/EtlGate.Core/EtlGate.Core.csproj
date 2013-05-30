@@ -59,7 +59,7 @@
     <Compile Include="ReconciliationResult.cs" />
     <Compile Include="ReconciliationStatus.cs" />
     <Compile Include="Record.cs" />
-    <Compile Include="RecordComparer.cs" />
+    <Compile Include="RecordKeyComparer.cs" />
     <Compile Include="RecordReconciler.cs" />
     <Compile Include="StreamTokenizer.cs" />
     <Compile Include="StringFieldComparer.cs" />
