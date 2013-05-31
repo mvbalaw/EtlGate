@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
 
-using EtlGate.Core.MvbaCore;
-
 using JetBrains.Annotations;
+
+using MvbaCore;
 
 namespace EtlGate.Core
 {

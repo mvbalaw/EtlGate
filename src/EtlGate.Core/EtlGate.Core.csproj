@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>EtlGate.Core</RootNamespace>
     <AssemblyName>EtlGate.Core</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -44,14 +44,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="IFieldComparer.cs" />
-    <Compile Include="MvbaCore\CodeQuery\FieldInfoExtensions.cs" />
-    <Compile Include="MvbaCore\CodeQuery\MemberInfoExtensions.cs" />
-    <Compile Include="MvbaCore\CodeQuery\PropertyInfoExtensions.cs" />
-    <Compile Include="MvbaCore\CodeQuery\TypeExtensions.cs" />
-    <Compile Include="MvbaCore\DefaultKeyAttribute.cs" />
-    <Compile Include="MvbaCore\INamedConstant.cs" />
-    <Compile Include="MvbaCore\NamedConstant.cs" />
-    <Compile Include="MvbaCore\NamedConstantExtensions.cs" />
     <Compile Include="OrderedReconciler.cs" />
     <Compile Include="OrderedRecordReconciler.cs" />
     <Compile Include="ParseException.cs" />
@@ -74,6 +66,9 @@
     <Reference Include="JetBrains.Annotations, Version=8.0.4.1195, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\JetBrains.Annotations\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+    <Reference Include="MvbaCore">
+      <HintPath>..\..\lib\MvbaCore\MvbaCore.dll</HintPath>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

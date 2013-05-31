@@ -3,10 +3,13 @@ using System.Collections.Generic;
 
 using FluentAssert;
 
+using JetBrains.Annotations;
+
 using NUnit.Framework;
 
 namespace EtlGate.Core.Tests
 {
+	[UsedImplicitly]
 	public class RecordReconcilerTests
 	{
 		[TestFixture]
