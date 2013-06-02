@@ -1,7 +1,6 @@
 EtlGate ReadMe
 ===
-
-## DESCRIPTION
+### Description
 
 EtlGate is a library to facilitate reading delimited files. 
 
@@ -12,7 +11,7 @@ It has the following features:
 * reads from a stream and returns IEnumerable so there is virtually no limit to your data size
 
 
-## HOW TO BUILD
+### How To Build:
 
 The build script requires Ruby with rake installed.
 
@@ -29,4 +28,7 @@ If you do not have ruby:
 
 [MIT License][mitlicense]
 
+This project is part of [MVBA's Open Source Projects][MvbaLawGithub].
+
+[MvbaLawGithub]: http://mvbalaw.github.io/
 [mitlicense]: http://www.opensource.org/licenses/mit-license.php
