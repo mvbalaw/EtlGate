@@ -75,8 +75,8 @@ end
 desc "Copy build artifacts to the staging folder"
 task :copy_artifacts => [:build] do
   puts "Copying files from bin folders to the build folder (#{settings[:stage]})..."
-  copy_output_files "src/#{PRODUCT_NAME}.Core/bin/#{settings[:compile_target]}", "*.{dll,pdb,exe}", settings[:stage]
-  copy_output_files "src/#{PRODUCT_NAME}.Core.Tests/bin/#{settings[:compile_target]}", "*.{dll,pdb,exe}", settings[:stage]
+  copy_output_files "src/#{PRODUCT_NAME}/bin/#{settings[:compile_target]}", "*.{dll,pdb,exe}", settings[:stage]
+  copy_output_files "src/#{PRODUCT_NAME}.Tests/bin/#{settings[:compile_target]}", "*.{dll,pdb,exe}", settings[:stage]
 end
 
 desc "Prepares the working directory for a new build"
@@ -93,7 +93,7 @@ nunit :test do |nunit|
   puts "Running the unit tests in the build folder (#{settings[:stage]})..."
   nunit.command = nunit_cmd
   nunit.options "/framework #{CLR_TOOLS_VERSION}"
-  nunit.assemblies "#{settings[:stage]}/#{PRODUCT_NAME}.Core.Tests.dll"
+  nunit.assemblies "#{settings[:stage]}/#{PRODUCT_NAME}.Tests.dll"
 end
 
 desc "Zips up the build results"
@@ -106,7 +106,6 @@ zip :archive do |zip|
   zip.output_path = [settings[:artifacts]]
   puts "Artifacts are available in the artifact folder: #{settings[:artifacts]}"
 end
-
 
 def copy_output_files(fromDir, filePattern, outDir)
   Dir.glob(File.join(fromDir, filePattern)){|file| 		

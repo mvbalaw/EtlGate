@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlGate.Core", "EtlGate.Core\EtlGate.Core.csproj", "{66D16B79-C764-47D7-BB01-E39892008C0F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlGate", "EtlGate\EtlGate.csproj", "{66D16B79-C764-47D7-BB01-E39892008C0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlGate.Core.Tests", "EtlGate.Core.Tests\EtlGate.Core.Tests.csproj", "{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EtlGate.Tests", "EtlGate.Tests\EtlGate.Tests.csproj", "{16B7A93D-F74E-4829-BF98-3A00ED1BB06B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
