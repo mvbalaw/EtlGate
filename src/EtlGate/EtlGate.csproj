@@ -38,6 +38,7 @@
     <Compile Include="CsvReader.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="CsvWriter.cs" />
     <Compile Include="DateFieldComparer.cs" />
     <Compile Include="DelimitedDataReader.cs" />
     <Compile Include="Extensions\IEnumerableTExtensions.cs">

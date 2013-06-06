@@ -18,6 +18,21 @@ namespace EtlGate
 		{
 		}
 
+		public Record(IEnumerable<string> headings, IList<string> fields)
+		{
+			var headingDictionary = new Dictionary<string, int>();
+			var i = 0;
+			foreach (var heading in headings)
+			{
+				headingDictionary[heading] = i;
+				i++;
+			}
+
+			_fields = fields;
+			_headings = headingDictionary;
+
+		}
+
 		public Record([NotNull] IList<string> fields, [NotNull] IDictionary<string, int> headings)
 		{
 			_fields = fields;
@@ -89,5 +104,6 @@ namespace EtlGate
 			var zeroBasedIndex = GetFieldIndex(name);
 			return HasField(zeroBasedIndex);
 		}
+
 	}
 }
