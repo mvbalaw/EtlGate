@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Threading;
+using System.Linq;
 
 using FluentAssert;
 
@@ -17,6 +18,13 @@ namespace EtlGate.Tests
 		[TestFixture]
 		public class When_asked_to_write_to_a_stream
 		{
+			private ICsvWriter _writer;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_writer = new CsvWriter();
+			}
 
 			[Test]
 			public void Given_a_field_with_embedded_comma__should_put_double_quotes_around_field()
@@ -24,7 +32,7 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Value1," })
+					new Record(new[] { "Value1," }, headings)
 				};
 
 				const string expected = "\"Value1,\"\r\n";
@@ -38,7 +46,7 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Val\r\nue1" })
+					new Record(new[] { "Val\r\nue1" }, headings)
 				};
 
 				const string expected = "\"Val\r\nue1\"\r\n";
@@ -52,7 +60,7 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "\"Value1" })
+					new Record(new[] { "\"Value1" }, headings)
 				};
 
 				const string expected = "\"\"\"Value1\"\r\n";
@@ -66,7 +74,7 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "\"Val\r\nue,1" })
+					new Record(new[] { "\"Val\r\nue,1" }, headings)
 				};
 
 				const string expected = "\"\"\"Val\r\nue,1\"\r\n";
@@ -80,7 +88,7 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1", "Field2" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Value,1", "Value2" })
+					new Record(new[] { "Value,1", "Value2" }, headings)
 				};
 
 				const string expected = "\"Value,1\",Value2\r\n";
@@ -94,8 +102,8 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1", "Field2", "Field3" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Record1Value1", "Record1Value2", "Record1Value3" }),
-					new Record(headings, new[] { "Record2Value1", "Record2Value2", "Record2Value3" })
+					new Record(new[] { "Record1Value1", "Record1Value2", "Record1Value3" }, headings),
+					new Record(new[] { "Record2Value1", "Record2Value2", "Record2Value3" }, headings)
 				};
 
 				const string expected = "Field1,Field2,Field3\r\n"
@@ -112,8 +120,8 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1", "Field2", "Field3" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Record 1 Value 1", "Record 1, Value 2", "Record 1 Value 3" }),
-					new Record(headings, new[] { "Record 2\r\n Value 1", "Record 2 Value 2", "\"Record 2 Value 3" })
+					new Record(new[] { "Record 1 Value 1", "Record 1, Value 2", "Record 1 Value 3" }, headings),
+					new Record(new[] { "Record 2\r\n Value 1", "Record 2 Value 2", "\"Record 2 Value 3" }, headings)
 				};
 
 				const string expected = "Field1,Field2,Field3\r\n"
@@ -130,9 +138,9 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field1", "Field2", "Field3" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Record 1 Value 1", "Record 1 Value 2", "Record 1 Value 3" }),
-					new Record(headings, new[] { "Record 2 Value 1", "Record 2 Value 2", "Record 2 Value 3" }),
-					new Record(headings, new[] { "Record 3 Value 1", "Record 3 Value 2", "Record 3 Value 3" })
+					new Record(new[] { "Record 1 Value 1", "Record 1 Value 2", "Record 1 Value 3" }, headings),
+					new Record(new[] { "Record 2 Value 1", "Record 2 Value 2", "Record 2 Value 3" }, headings),
+					new Record(new[] { "Record 3 Value 1", "Record 3 Value 2", "Record 3 Value 3" }, headings)
 				};
 
 				const string expected = "Record 1 Value 1,Record 1 Value 2,Record 1 Value 3\r\n"
@@ -142,13 +150,13 @@ namespace EtlGate.Tests
 				Check(records, hasHeaderRow, expected);
 			}
 
-			private static void Check(IEnumerable<Record> records, bool hasHeader, string expectedValue)
+			private void Check(IEnumerable<Record> records, bool hasHeader, string expectedValue)
 			{
 				using (var stream = new MemoryStream())
 				{
 
 					var writer = new StreamWriter(stream);
-					CsvWriter.WriteTo(writer, records, hasHeader);
+					_writer.WriteTo(writer, records, hasHeader);
 					writer.Flush();
 					stream.Position = 0;
 
@@ -164,6 +172,13 @@ namespace EtlGate.Tests
 		[TestFixture]
 		public class When_asked_to_write_to_a_file
 		{
+			private ICsvWriter _writer;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_writer = new CsvWriter();
+			}
 
 			[Test,ExpectedException(typeof(ArgumentException))]
 			public void Given_a_null_filename__should_throw_an_ArgumentException()
@@ -173,7 +188,7 @@ namespace EtlGate.Tests
 				const bool includeHeaders = true;
 
 // ReSharper disable ExpressionIsAlwaysNull
-				CsvWriter.WriteTo(fileName, records, includeHeaders);
+				_writer.WriteTo(fileName, records, includeHeaders);
 // ReSharper restore ExpressionIsAlwaysNull
 				
 			}
@@ -186,7 +201,7 @@ namespace EtlGate.Tests
 				const bool includeHeaders = true;
 
 // ReSharper disable ExpressionIsAlwaysNull
-				CsvWriter.WriteTo(fileName, records, includeHeaders);
+				_writer.WriteTo(fileName, records, includeHeaders);
 // ReSharper restore ExpressionIsAlwaysNull
 
 			}
@@ -198,9 +213,9 @@ namespace EtlGate.Tests
 				var headings = new[] { "Field 1", "Field 2", "Field 3" };
 				var records = new List<Record>
 				{
-					new Record(headings, new[] { "Record 1 Value 1", "Record 1 Value 2", "Record 1 Value 3" }),
-					new Record(headings, new[] { "Record 2 Value 1", "Record 2 Value 2", "Record 2 Value 3" }),
-					new Record(headings, new[] { "Record 3 Value 1", "Record 3 Value 2", "Record 3 Value 3" })
+					new Record(new[] { "Record 1 Value 1", "Record 1 Value 2", "Record 1 Value 3" }, headings),
+					new Record(new[] { "Record 2 Value 1", "Record 2 Value 2", "Record 2 Value 3" }, headings),
+					new Record(new[] { "Record 3 Value 1", "Record 3 Value 2", "Record 3 Value 3" }, headings)
 				};
 
 				const string expected = "Field 1,Field 2,Field 3\r\n"
@@ -211,7 +226,7 @@ namespace EtlGate.Tests
 				const string fileName = "testfile.csv";
 				const bool includeHeaders = true;
 
-				CsvWriter.WriteTo(fileName, records, includeHeaders);
+				_writer.WriteTo(fileName, records, includeHeaders);
 
 				using (var reader = new StreamReader(new FileStream(fileName, FileMode.Open)))
 				{
@@ -220,46 +235,45 @@ namespace EtlGate.Tests
 				}
 			}
 
-			[Test,Explicit]
+			[Test]
+			[Explicit]
 			public void Given_a_large_list_of_records__should_write_values_to_file_in_less_than_15_seconds()
 			{
-				var headings = new List<string>();
-				for (var i = 0; i < 60; i++)
-				{
-					headings.Add(String.Format("Field {0}", i));
-				}
+				const int numberOfHeadings = 50;
 
-				var fields = new List<string>();
-				for (var i = 0; i < 50; i++)
-				{	
-					if (i % 10 == 0)
-					{
-						fields.Add("Embeded, comma");
-					}
-					else if (i % 7 == 0)
-					{
-						fields.Add("Quote in \"String");
-					}
-					else
-					{
-						fields.Add(String.Format("Simple Value"));
-					}
-					
-				}
+				var headings = Enumerable
+					.Range(0, numberOfHeadings)
+					.Select(i => String.Format("Field {0}", i))
+					.ToList();
 
 				var records = new List<Record>();
-				for (var i = 0; i < 500000; i++)
+				for (var iRecord = 0; iRecord < 500000; iRecord++)
 				{
-					records.Add(new Record(headings, fields));
+					var fields = new List<string>();
+					for (var iField = 0; iField < numberOfHeadings; iField++)
+					{
+						if (iField % 10 == 0)
+						{
+							fields.Add("Embeded, comma" + iField);
+						}
+						else if (iField % 7 == 0)
+						{
+							fields.Add("Quote in \"String" + iField);
+						}
+						else
+						{
+							fields.Add(String.Format("Simple Value" + iField));
+						}
+					}
+					records.Add(new Record(fields, headings));
 				}
 
-				var watch = new System.Diagnostics.Stopwatch();
+				var watch = new Stopwatch();
 				watch.Start();
-				CsvWriter.WriteTo("bigfile.csv", records, true);
+				_writer.WriteTo("bigfile.csv", records, true);
 				watch.Stop();
 				Console.WriteLine(watch.Elapsed);
-				watch.Elapsed.ShouldBeLessThan(new TimeSpan(0, 0, 0, 15));
-
+				watch.Elapsed.ShouldBeLessThan(TimeSpan.FromSeconds(15));
 			}
 		}
 	}

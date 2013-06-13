@@ -34,6 +34,7 @@
     <Compile Include="..\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="CsvTests.cs" />
     <Compile Include="CsvWriterTests.cs" />
     <Compile Include="DelimitedDataReaderTests.cs" />
     <Compile Include="CsvReaderTests.cs" />

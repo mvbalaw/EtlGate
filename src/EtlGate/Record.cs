@@ -18,19 +18,9 @@ namespace EtlGate
 		{
 		}
 
-		public Record(IEnumerable<string> headings, IList<string> fields)
+		public Record(IList<string> fields, IList<string> headings)
+			: this(fields, Enumerable.Range(0, headings.Count).ToDictionary(headingIndex => headings[headingIndex], fieldIndex => fieldIndex))
 		{
-			var headingDictionary = new Dictionary<string, int>();
-			var i = 0;
-			foreach (var heading in headings)
-			{
-				headingDictionary[heading] = i;
-				i++;
-			}
-
-			_fields = fields;
-			_headings = headingDictionary;
-
 		}
 
 		public Record([NotNull] IList<string> fields, [NotNull] IDictionary<string, int> headings)

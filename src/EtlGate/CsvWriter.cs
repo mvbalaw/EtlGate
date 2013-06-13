@@ -1,40 +1,68 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace EtlGate
 {
-	public static class CsvWriter
+	public interface ICsvWriter
 	{
+		void WriteTo(StreamWriter writer, IEnumerable<Record> records, bool includeHeaders);
+		void WriteTo(string fileName, IEnumerable<Record> records, bool includeHeaders);
+	}
 
-		public static void WriteTo(StreamWriter writer, IEnumerable<Record> records, bool includeHeaders)
+	public class CsvWriter : ICsvWriter
+	{
+		private static void WriteList(IEnumerable<string> values, TextWriter writer, string fieldDelimiter, string recordDelimiter)
 		{
+			var valueStream = values.Memoize(1);
+			writer.Write(Csv.Escape(valueStream.First()));
+			foreach (var field in valueStream.Skip(1))
+			{
+				writer.Write(fieldDelimiter);
+				writer.Write(Csv.Escape(field));
+			}
+			writer.Write(recordDelimiter);
+		}
+
+		public void WriteTo(StreamWriter writer, IEnumerable<Record> records, bool includeHeaders)
+		{
+			if (writer == null)
+			{
+				throw new ArgumentException("Please provide a writer.", "writer");
+			}
+			if (records == null)
+			{
+				throw new ArgumentException("No records provided.", "records");
+			}
+
 			const string fieldDelimiter = ",";
 			const string recordDelimiter = "\r\n";
 
-			var firstRecord = true;
-			foreach (var record in records)
-			{
-				if (firstRecord && includeHeaders)
-				{
-					firstRecord = false;
-					WriteList(record.HeadingFieldNames, writer, fieldDelimiter, recordDelimiter);
-				}
+			var recordStream = records.Memoize(1);
 
-				var rowValues = new List<string>();
-				for (var i = 0; i < record.FieldCount; i++)
-				{
-					rowValues.Add(record.GetField(i));
-				}
+			if (includeHeaders)
+			{
+				WriteList(recordStream.First().HeadingFieldNames, writer, fieldDelimiter, recordDelimiter);
+			}
+
+			foreach (var rowValues in recordStream.Select(record => Enumerable
+				                                                        .Range(0, record.FieldCount)
+				                                                        .Select(record.GetField)))
+			{
 				WriteList(rowValues, writer, fieldDelimiter, recordDelimiter);
 			}
 		}
 
-		public static void WriteTo(string fileName, IEnumerable<Record> records, bool includeHeaders)
+		public void WriteTo(string fileName, IEnumerable<Record> records, bool includeHeaders)
 		{
-			if ((fileName == null) || (records == null))
+			if (fileName == null)
 			{
-				throw new ArgumentException();
+				throw new ArgumentException("Please provide a file name.", "fileName");
+			}
+			if (records == null)
+			{
+				throw new ArgumentException("No records provided.", "records");
 			}
 
 			var stream = new FileStream(fileName, FileMode.Create);
@@ -43,41 +71,5 @@ namespace EtlGate
 				WriteTo(writer, records, includeHeaders);
 			}
 		}
-
-		private static void WriteList(IEnumerable<string> values, TextWriter writer, string fieldDelimiter, string recordDelimiter)
-		{
-			var firstField = true;
-			foreach (var field in values)
-			{
-				if (!firstField)
-				{
-					writer.Write(fieldDelimiter);
-				}
-				writer.Write(Csv.Escape(field));
-				firstField = false;
-			}
-			writer.Write(recordDelimiter);
-		}
 	}
-
-	// http://stackoverflow.com/questions/4685705/good-csv-writer-for-c
-
-	public static class Csv
-	{
-		public static string Escape(string s)
-		{
-			if (s.Contains(Quote))
-				s = s.Replace(Quote, EscapedQuote);
-
-			if (s.IndexOfAny(CharactersThatMustBeQuoted) > -1)
-				s = Quote + s + Quote;
-
-			return s;
-		}
-
-		private const string Quote = "\"";
-		private const string EscapedQuote = "\"\"";
-		private static readonly char[] CharactersThatMustBeQuoted = { ',', '"', '\n' };
-	}
-
 }
