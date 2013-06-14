@@ -55,6 +55,7 @@
     <Compile Include="Record.cs" />
     <Compile Include="RecordKeyComparer.cs" />
     <Compile Include="RecordReconciler.cs" />
+    <Compile Include="RecordExtensions.cs" />
     <Compile Include="StreamTokenizer.cs" />
     <Compile Include="StringFieldComparer.cs" />
     <Compile Include="Token.cs" />
