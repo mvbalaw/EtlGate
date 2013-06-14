@@ -50,6 +50,7 @@
     <Compile Include="RecordKeyComparerTests.cs" />
     <Compile Include="RecordReconcilerTests.cs" />
     <Compile Include="RecordTests.cs" />
+    <Compile Include="PipelineTests.cs" />
     <Compile Include="StreamTokenizerTests.cs" />
     <Compile Include="TrieTests.cs" />
   </ItemGroup>
