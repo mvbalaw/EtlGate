@@ -705,7 +705,9 @@ namespace EtlGate.Tests
 						actualValue.ShouldNotBeNull();
 						var expectedValue = expectedRecord.GetField(fieldIndex);
 						expectedValue.ShouldNotBeNull();
+// ReSharper disable once PossibleNullReferenceException
 						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+// ReSharper disable once PossibleNullReferenceException
 						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
 						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + rowNumber) + " field " + fieldIndex + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}
@@ -720,7 +722,9 @@ namespace EtlGate.Tests
 						actualValue.ShouldNotBeNull();
 						var expectedValue = expectedRecord.GetField(headingFieldName);
 						expectedValue.ShouldNotBeNull();
+// ReSharper disable once PossibleNullReferenceException
 						actualValue = actualValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
+// ReSharper disable once PossibleNullReferenceException
 						expectedValue = expectedValue.Replace("\r", "RETURN").Replace("\n", "NEWLINE");
 						actualValue.ShouldBeEqualTo(expectedValue, "Row " + (1 + rowNumber) + " " + headingFieldName + " did not match. Expected '" + expectedValue + "' but was '" + actualValue + "'");
 					}
