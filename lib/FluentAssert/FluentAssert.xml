@@ -11,10 +11,4 @@
         <argument>item:null=&gt;halt</argument>
     </attribute>
   </member>
-  <member name="M:FluentAssert.AssertExtensions.ShouldNotBeNull(string)">
-    <attribute ctor="M:JetBrains.Annotations.AssertionMethodAttribute.#ctor"/>
-    <attribute ctor="M:JetBrains.Annotations.ContractAnnotationAttribute.#ctor(System.String)">
-        <argument>item:null=&gt;halt</argument>
-    </attribute>
-  </member>
 </assembly>

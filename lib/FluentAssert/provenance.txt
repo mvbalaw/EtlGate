@@ -1,5 +1,0 @@
-source: FluentAssert http://github.com/mvba/FluentAssert
-
-license source: http://www.opensource.org/licenses/mit-license.php
-
-note: FluentAssert.xml is a JetBrains ReSharper external annotations file.
