@@ -93,7 +93,7 @@ namespace EtlGate.Tests
 			[ExpectedException(typeof(ArgumentOutOfRangeException), ExpectedMessage = Record.ErrorFieldIndexMustBeNonNegativeMessage + "\r\nParameter name: zeroBasedIndex")]
 			public void Given_a_negative_field_number_is_requested__should_throw_ArgumentOutOfRangeException()
 			{
-				var record = new Record(new[] { "x" });
+				var record = new Record("x");
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
 				record.HasField(-1);
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
@@ -102,7 +102,7 @@ namespace EtlGate.Tests
 			[Test]
 			public void Given_a_record_with_1_field_and_field__0__is_requested__should_return_true()
 			{
-				var record = new Record(new[] { "x" });
+				var record = new Record("x");
 				var result = record.HasField(0);
 				result.ShouldBeTrue();
 			}
@@ -110,7 +110,7 @@ namespace EtlGate.Tests
 			[Test]
 			public void Given_a_record_with_1_field_and_field__1__is_requested__should_return_false()
 			{
-				var record = new Record(new[] { "x" });
+				var record = new Record("x");
 				var result = record.HasField(1);
 				result.ShouldBeFalse();
 			}

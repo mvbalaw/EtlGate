@@ -73,7 +73,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 1)
 					{
@@ -108,7 +108,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 1)
 					{
@@ -147,7 +147,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 0)
 					{
@@ -178,7 +178,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 1)
 					{
@@ -209,7 +209,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 2)
 					{
@@ -241,7 +241,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 1)
 					{
@@ -271,7 +271,7 @@ namespace EtlGate.Tests
 			{
 				const string input = "abc";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-				var result = _tokenizer.Tokenize(memoryStream, new[] { 'a' }).ToList();
+				var result = _tokenizer.Tokenize(memoryStream, 'a').ToList();
 				result.Count.ShouldBeEqualTo(3);
 				var first = result[0];
 				first.GetType().ShouldBeEqualTo(typeof(SpecialToken));
@@ -291,7 +291,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 1)
 					{
@@ -326,7 +326,7 @@ namespace EtlGate.Tests
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = new List<Token>();
 				var tokenCount = 0;
-				foreach (var token in _tokenizer.Tokenize(memoryStream, new[] { 'a' }))
+				foreach (var token in _tokenizer.Tokenize(memoryStream, 'a'))
 				{
 					if (tokenCount == 2)
 					{
@@ -375,7 +375,7 @@ namespace EtlGate.Tests
 			{
 				const string input = "h";
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-				var result = _tokenizer.Tokenize(memoryStream, new[] { 'h' }).ToList();
+				var result = _tokenizer.Tokenize(memoryStream, 'h').ToList();
 				result.Count.ShouldBeEqualTo(2);
 				var token = result.First();
 				token.GetType().ShouldBeEqualTo(typeof(SpecialToken));
@@ -946,7 +946,7 @@ namespace EtlGate.Tests
 				{
 					var actual = result[i];
 					var expected = expect[i];
-					(actual.GetType()).ShouldBeEqualTo(expected.GetType(), "Token " + (1 + i) + " had token type " + actual.GetType() + " but should have been " + expected.GetType());
+					actual.GetType().ShouldBeEqualTo(expected.GetType(), "Token " + (1 + i) + " had token type " + actual.GetType() + " but should have been " + expected.GetType());
 					actual.Value.ShouldBeEqualTo(expected.Value, "Token " + (1 + i) + " had value '" + actual.Value + "' but should have been: " + expected.Value);
 				}
 			}
