@@ -27,6 +27,20 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
+			public void Given_a_field_with_a_null_value__should_not_put_double_quotes()
+			{
+				var headings = new[] { "Field1" };
+				var records = new List<Record>
+				{
+					new Record(new string[] { null }, headings)
+				};
+
+				const string expected = "\r\n";
+				const bool hasHeaderRow = false;
+				Check(records, hasHeaderRow, expected);
+			}
+
+			[Test]
 			public void Given_a_field_with_embedded_comma__should_put_double_quotes_around_field()
 			{
 				var headings = new[] { "Field1" };

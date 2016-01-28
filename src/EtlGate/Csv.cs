@@ -8,6 +8,10 @@
 
 		public static string Escape(string s)
 		{
+			if (s == null)
+			{
+				return "";
+			}
 			var specialIndex = s.IndexOfAny(CharactersThatMustBeQuoted);
 			if (specialIndex == -1)
 			{
