@@ -4,7 +4,7 @@
 	{
 		// http://stackoverflow.com/questions/4685705/good-csv-writer-for-c
 
-		private static readonly char[] CharactersThatMustBeQuoted = new[]{',', '"', '\r', '\n'};
+		private static readonly char[] CharactersThatMustBeQuoted = {',', '"', '\r', '\n'};
 
 		public static string Escape(string s)
 		{
@@ -17,7 +17,7 @@
 			{
 				return s;
 			}
-			return "\"" + s.Substring(0, specialIndex) + s.Substring(specialIndex).Replace("\"", "\"\"") + "\"";
+			return string.Format("\"{0}{1}\"", s.Substring(0, specialIndex), s.Substring(specialIndex).Replace("\"", "\"\""));
 		}
 	}
 }

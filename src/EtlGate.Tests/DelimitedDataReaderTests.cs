@@ -16,6 +16,148 @@ namespace EtlGate.Tests
 	public class DelimitedDataReaderTests
 	{
 		[TestFixture]
+		public class When_asked_to_read_from_stream__validation
+		{
+			private IDelimitedDataReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new DelimitedDataReader(new StreamTokenizer());
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNamedFieldConverters)]
+			public void Given_hasHeaderRow_is_false__should_throw_an_ArgumentException()
+			{
+				var stream = new MemoryStream();
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFrom(stream, namedFieldConverters:new Dictionary<string, Func<string, object>>()).ToList();
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorBothNamedAndIndexedFieldConverters)]
+			public void Given_both_namedFieldConverters_and_indexedFieldConverts_are_given__should_throw_an_ArgumentException()
+			{
+				var stream = new MemoryStream();
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFrom(stream, hasHeaderRow:true, namedFieldConverters:new Dictionary<string, Func<string, object>>(), indexedFieldConverters:new Dictionary<int, Func<string, object>>()).ToList();
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			public void Given_a_null_stream__should_throw_an_ArgumentException()
+			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFrom(null, hasHeaderRow:true).ToList();
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_without_headers__validation
+		{
+			private IDelimitedDataReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new DelimitedDataReader(new StreamTokenizer());
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			public void Given_a_null_stream__should_throw_an_ArgumentException()
+			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFromWithoutHeaders(null).ToList();
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_with_headers__validation
+		{
+			private IDelimitedDataReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new DelimitedDataReader(new StreamTokenizer());
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			public void Given_a_null_stream__should_throw_an_ArgumentException()
+			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFromWithHeaders(null).ToList();
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_with_headers_and_field_converters
+		{
+			private IDelimitedDataReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new DelimitedDataReader(new StreamTokenizer());
+			}
+
+			[Test]
+			public void Given_a_named_converter__Should_store_the_converted_field_value()
+			{
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"a
+1"));
+				var namedFieldConverters = new Dictionary<string, Func<string, object>>
+				                           {
+					                           { "a", x => Int32.Parse(x) }
+				                           };
+				var result = _reader.ReadFromWithHeaders(stream, namedFieldConverters:namedFieldConverters).ToList();
+				var value = result[0].GetField<int>("a");
+				value.ShouldBeEqualTo(1);
+			}
+
+			[Test]
+			public void Given_a_named_converter_for_a_field_not_in_the_headers__Should_ignore_it_but_use_ones_that_do_match()
+			{
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"a
+1"));
+				var namedFieldConverters = new Dictionary<string, Func<string, object>>
+				                             {
+					                             { "a", x => Int32.Parse(x) },
+					                             { "unknown", x => Int32.Parse(x) }
+				                             };
+				var result = _reader.ReadFromWithHeaders(stream, namedFieldConverters: namedFieldConverters).ToList();
+				var value = result[0].GetField<int>("a");
+				value.ShouldBeEqualTo(1);
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_without_headers_but_with_field_converters
+		{
+			private IDelimitedDataReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new DelimitedDataReader(new StreamTokenizer());
+			}
+
+			[Test]
+			public void Given_an_indexed_converter__Should_store_the_converted_field_value()
+			{
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"1"));
+				var indexedFieldConverters = new Dictionary<int, Func<string, object>>
+				                             {
+					                             { 0, x => Int32.Parse(x) }
+				                             };
+				var result = _reader.ReadFromWithoutHeaders(stream, indexedFieldConverters:indexedFieldConverters).ToList();
+				var value = result[0].GetField<int>(0);
+				value.ShouldBeEqualTo(1);
+			}
+		}
+
+		[TestFixture]
 		public class When_asked_to_read_from_a_stream_with_field_delimiter_COMMA_record_delimiter_RETURN_NEWLINE_and_quoted_fields_NOT_supported
 		{
 			private IDelimitedDataReader _reader;
@@ -47,7 +189,7 @@ namespace EtlGate.Tests
 						rows.RemoveAt(rows.Count - 1);
 					}
 					var expect = rows.Select(x => new Record(x.ToArray()))
-					                 .ToArray();
+						.ToArray();
 					try
 					{
 						Check(input.ToString(), expect);
@@ -75,12 +217,12 @@ namespace EtlGate.Tests
 			{
 				const string input = ",b";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "",
-							             "b"
-							             )
-					             });
+				             {
+					             new Record(
+						             "",
+						             "b"
+						             )
+				             });
 			}
 
 			[Test]
@@ -88,12 +230,12 @@ namespace EtlGate.Tests
 			{
 				const string input = "\",\r\"\ra";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "\"",
-							             "\r\"\ra"
-							             )
-					             });
+				             {
+					             new Record(
+						             "\"",
+						             "\r\"\ra"
+						             )
+				             });
 			}
 
 			[Test]
@@ -101,13 +243,13 @@ namespace EtlGate.Tests
 			{
 				const string input = "\"a,b\",c";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "\"a",
-							             "b\""
-							             , "c"
-							             )
-					             });
+				             {
+					             new Record(
+						             "\"a",
+						             "b\""
+						             , "c"
+						             )
+				             });
 			}
 
 			[Test]
@@ -115,15 +257,15 @@ namespace EtlGate.Tests
 			{
 				const string input = "\"a\r\nb\",c";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "\"a"
-							             ),
-						             new Record(
-							             "b\"",
-							             "c"
-							             )
-					             });
+				             {
+					             new Record(
+						             "\"a"
+						             ),
+					             new Record(
+						             "b\"",
+						             "c"
+						             )
+				             });
 			}
 
 			[Test]
@@ -131,9 +273,9 @@ namespace EtlGate.Tests
 			{
 				const string input = "\r\n";
 				Check(input, new[]
-					             {
-						             new Record()
-					             });
+				             {
+					             new Record()
+				             });
 			}
 
 			[Test]
@@ -141,11 +283,11 @@ namespace EtlGate.Tests
 			{
 				const string input = "\r";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "\r"
-							             )
-					             });
+				             {
+					             new Record(
+						             "\r"
+						             )
+				             });
 			}
 
 			[Test]
@@ -153,12 +295,12 @@ namespace EtlGate.Tests
 			{
 				const string input = "\ra\"ca\"\r,bc";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "\ra\"ca\"\r",
-							             "bc"
-							             )
-					             });
+				             {
+					             new Record(
+						             "\ra\"ca\"\r",
+						             "bc"
+						             )
+				             });
 			}
 
 			[Test]
@@ -166,13 +308,13 @@ namespace EtlGate.Tests
 			{
 				const string input = "a,,c";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "a",
-							             "",
-							             "c"
-							             )
-					             });
+				             {
+					             new Record(
+						             "a",
+						             "",
+						             "c"
+						             )
+				             });
 			}
 
 			[Test]
@@ -180,13 +322,13 @@ namespace EtlGate.Tests
 			{
 				const string input = "a,\"\",c";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "a",
-							             "\"\"",
-							             "c"
-							             )
-					             });
+				             {
+					             new Record(
+						             "a",
+						             "\"\"",
+						             "c"
+						             )
+				             });
 			}
 
 			[Test]
@@ -194,12 +336,12 @@ namespace EtlGate.Tests
 			{
 				const string input = "a,\"\"";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "a",
-							             "\"\""
-							             )
-					             });
+				             {
+					             new Record(
+						             "a",
+						             "\"\""
+						             )
+				             });
 			}
 
 			[Test]
@@ -207,12 +349,12 @@ namespace EtlGate.Tests
 			{
 				const string input = "a,";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "a",
-							             ""
-							             )
-					             });
+				             {
+					             new Record(
+						             "a",
+						             ""
+						             )
+				             });
 			}
 
 			[Test]
@@ -220,16 +362,16 @@ namespace EtlGate.Tests
 			{
 				const string input = "a,b\r\nc,d\r\n";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "a",
-							             "b"
-							             ),
-						             new Record(
-							             "c",
-							             "d"
-							             )
-					             });
+				             {
+					             new Record(
+						             "a",
+						             "b"
+						             ),
+					             new Record(
+						             "c",
+						             "d"
+						             )
+				             });
 			}
 
 			[Test]
@@ -237,12 +379,12 @@ namespace EtlGate.Tests
 			{
 				const string input = "a\"b,c";
 				Check(input, new[]
-					             {
-						             new Record(
-							             "a\"b",
-							             "c"
-							             )
-					             });
+				             {
+					             new Record(
+						             "a\"b",
+						             "c"
+						             )
+				             });
 			}
 
 			[Test]
@@ -341,9 +483,9 @@ namespace EtlGate.Tests
 					var rows = GetExpected(input.ToString(), fieldSeparator.ToString(), quotedFieldsSupported).ToList();
 
 					if (input.ToString().EndsWith(recordSeparator) &&
-					    rows.Any() &&
-					    rows.Last().Count == 1 &&
-					    rows.Last().Last().Value == "")
+						rows.Any() &&
+						rows.Last().Count == 1 &&
+						rows.Last().Last().Value == "")
 					{
 						rows.RemoveAt(rows.Count - 1);
 					}
@@ -387,17 +529,17 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\n\r\r";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               ",\""
-							               ),
-						               new Record(
-							               "\r\"\r"
-							               ),
-						               new Record(
-							               ""
-							               )
-					               };
+				               {
+					               new Record(
+						               ",\""
+						               ),
+					               new Record(
+						               "\r\"\r"
+						               ),
+					               new Record(
+						               ""
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -408,12 +550,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\n";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               ",\"a\",",
-							               "\r\"\r"
-							               )
-					               };
+				               {
+					               new Record(
+						               ",\"a\",",
+						               "\r\"\r"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -424,12 +566,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = ",\r\n\r";
 
 				var expected = new[]
-					               {
-						               new Record(
-							               "",
-							               "a"
-							               )
-					               };
+				               {
+					               new Record(
+						               "",
+						               "a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator);
 			}
 
@@ -439,12 +581,12 @@ namespace EtlGate.Tests
 				const string input = ",\ra";
 				const string fieldSeparator = "\r";
 				var expected = new[]
-					               {
-						               new Record(
-							               ",",
-							               "a"
-							               )
-					               };
+				               {
+					               new Record(
+						               ",",
+						               "a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator);
 			}
 
@@ -455,11 +597,11 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\n\"a\na,\r,\"\""
-							               )
-					               };
+				               {
+					               new Record(
+						               "\n\"a\na,\r,\"\""
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -471,11 +613,11 @@ namespace EtlGate.Tests
 				const string fieldSeparator = ",\"";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\",\"a"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\",\"a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -488,11 +630,11 @@ namespace EtlGate.Tests
 				const bool supportQuotedFields = true;
 
 				var expected = new[]
-					               {
-						               new Record(
-							               "a"
-							               )
-					               };
+				               {
+					               new Record(
+						               "a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -503,14 +645,14 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\r\"";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\n\"\r"
-							               ),
-						               new Record(
-							               ",\""
-							               )
-					               };
+				               {
+					               new Record(
+						               "\n\"\r"
+						               ),
+					               new Record(
+						               ",\""
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -521,12 +663,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "a\"";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\n\r\n\ra",
-							               ","
-							               )
-					               };
+				               {
+					               new Record(
+						               "\n\r\n\ra",
+						               ","
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -537,14 +679,14 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\r\"\r";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\n\r\r"
-							               ),
-						               new Record(
-							               ",\ra"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\n\r\r"
+						               ),
+					               new Record(
+						               ",\ra"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -555,11 +697,11 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\n";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\n\r\ra,\r\r\n"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\n\r\ra,\r\r\n"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -569,11 +711,11 @@ namespace EtlGate.Tests
 				const string input = "\"\"\n,\na\r\r\ra";
 				const string fieldSeparator = "a,";
 				var expected = new[]
-					               {
-						               new Record(
-							               "\"\"\n,\na\r\r\ra"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\"\"\n,\na\r\r\ra"
+						               )
+				               };
 				Check(input, expected, fieldSeparator);
 			}
 
@@ -584,14 +726,14 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\r";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               ""
-							               ),
-						               new Record(
-							               "a"
-							               )
-					               };
+				               {
+					               new Record(
+						               ""
+						               ),
+					               new Record(
+						               "a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -601,13 +743,13 @@ namespace EtlGate.Tests
 				const string input = "\"\r\na\r\",";
 				const string fieldSeparator = "\"\r\n\r";
 				var expected = new[]
-					               {
-						               new Record(
-							               "\""),
-						               new Record(
-							               "a\r\","
-							               )
-					               };
+				               {
+					               new Record(
+						               "\""),
+					               new Record(
+						               "a\r\","
+						               )
+				               };
 				Check(input, expected, fieldSeparator);
 			}
 
@@ -618,14 +760,14 @@ namespace EtlGate.Tests
 				const string fieldSeparator = ",\",\n";
 
 				var expected = new[]
-					               {
-						               new Record(
-							               "\"\r"
-							               ),
-						               new Record(
-							               "\r\",,a\n"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\"\r"
+						               ),
+					               new Record(
+						               "\r\",,a\n"
+						               )
+				               };
 				Check(input, expected, fieldSeparator);
 			}
 
@@ -637,11 +779,11 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\",";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\ra\r\n\r\",r"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\ra\r\n\r\",r"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -653,12 +795,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "a\n,";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\r,\r",
-							               ""
-							               )
-					               };
+				               {
+					               new Record(
+						               "\r,\r",
+						               ""
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -668,12 +810,12 @@ namespace EtlGate.Tests
 				const string input = "\r\"\na\r\na\"\"a";
 				const string fieldSeparator = "\r\na";
 				var expected = new[]
-					               {
-						               new Record(
-							               "\r\"\na",
-							               "\"\"a"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\r\"\na",
+						               "\"\"a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator);
 			}
 
@@ -684,12 +826,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\"";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\r",
-							               "a"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\r",
+						               "a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -700,11 +842,11 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\n";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "\r"
-							               )
-					               };
+				               {
+					               new Record(
+						               "\r"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -715,12 +857,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\n";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "a\""
-							               , ","
-							               )
-					               };
+				               {
+					               new Record(
+						               "a\""
+						               , ","
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -731,14 +873,14 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\r,\r,";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "a"
-							               ),
-						               new Record(
-							               "\r"
-							               )
-					               };
+				               {
+					               new Record(
+						               "a"
+						               ),
+					               new Record(
+						               "\r"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -749,14 +891,14 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\n";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "a"
-							               ),
-						               new Record(
-							               "a"
-							               )
-					               };
+				               {
+					               new Record(
+						               "a"
+						               ),
+					               new Record(
+						               "a"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -767,12 +909,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\r";
 				const bool supportQuotedFields = true;
 				var expected = new[]
-					               {
-						               new Record(
-							               "aa\r\r",
-							               "\na\ra"
-							               )
-					               };
+				               {
+					               new Record(
+						               "aa\r\r",
+						               "\na\ra"
+						               )
+				               };
 				Check(input, expected, fieldSeparator, supportQuotedFields);
 			}
 
@@ -805,13 +947,13 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"\n";
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\n",
-								               "\n,aaa\","
-							               }
-					               };
+						               "\n",
+						               "\n,aaa\","
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -837,13 +979,13 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\n,",
-								               ""
-							               }
-					               };
+						               "\n,",
+						               ""
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -881,13 +1023,13 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "",
-								               "\n,"
-							               }
-					               };
+						               "",
+						               "\n,"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -901,12 +1043,12 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\r\"\"a\"\r,\",\n"
-							               }
-					               };
+						               "\r\"\"a\"\r,\",\n"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -920,12 +1062,12 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\n"
-							               }
-					               };
+						               "\n"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 				CheckGetExpectedResult(result, expected);
 			}
@@ -950,13 +1092,13 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\n\r\n\ra",
-								               ","
-							               }
-					               };
+						               "\n\r\n\ra",
+						               ","
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -970,12 +1112,12 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "a\n\r,a\n,,"
-							               }
-					               };
+						               "a\n\r,a\n,,"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -988,13 +1130,13 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"a";
 				const bool supportQuotedFields = false;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "aa",
-								               "\"\ra,,\n"
-							               }
-					               };
+						               "aa",
+						               "\"\ra,,\n"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1008,17 +1150,17 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = false;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "a,,\""
-							               },
-						               new List<string>
-							               {
-								               "\n\n",
-								               ""
-							               }
-					               };
+						               "a,,\""
+					               },
+					               new List<string>
+					               {
+						               "\n\n",
+						               ""
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1032,16 +1174,16 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               ""
-							               },
-						               new List<string>
-							               {
-								               "\n\ra\"a\""
-							               }
-					               };
+						               ""
+					               },
+					               new List<string>
+					               {
+						               "\n\ra\"a\""
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1055,20 +1197,20 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\n"
-							               },
-						               new List<string>
-							               {
-								               ","
-							               },
-						               new List<string>
-							               {
-								               ""
-							               }
-					               };
+						               "\n"
+					               },
+					               new List<string>
+					               {
+						               ","
+					               },
+					               new List<string>
+					               {
+						               ""
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1082,12 +1224,12 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "a\"aaa\na"
-							               }
-					               };
+						               "a\"aaa\na"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1113,13 +1255,13 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "aa",
-								               ",,\""
-							               }
-					               };
+						               "aa",
+						               ",,\""
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1133,13 +1275,13 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = false;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\r\"\na",
-								               "\"\"a"
-							               }
-					               };
+						               "\r\"\na",
+						               "\"\"a"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1152,16 +1294,16 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "";
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               ",\""
-							               },
-						               new List<string>
-							               {
-								               "\r\r\"\r\r\""
-							               }
-					               };
+						               ",\""
+					               },
+					               new List<string>
+					               {
+						               "\r\r\"\r\r\""
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1174,12 +1316,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "a\r";
 				const bool supportQuotedFields = false;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               ",a"
-							               }
-					               };
+						               ",a"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1192,17 +1334,17 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\ra";
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               ","
-							               },
-						               new List<string>
-							               {
-								               "\n",
-								               "a,\n,"
-							               }
-					               };
+						               ","
+					               },
+					               new List<string>
+					               {
+						               "\n",
+						               "a,\n,"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1215,12 +1357,12 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\r\r";
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "\n\r\"\"a\n\raa,"
-							               }
-					               };
+						               "\n\r\"\"a\n\raa,"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1233,13 +1375,13 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\"a";
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "a\r,\n\r\"\r",
-								               "\n"
-							               }
-					               };
+						               "a\r,\n\r\"\r",
+						               "\n"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1252,13 +1394,13 @@ namespace EtlGate.Tests
 				const string fieldSeparator = "\r\r";
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               "",
-								               ",a\na,\n,\r"
-							               }
-					               };
+						               "",
+						               ",a\na,\n,\r"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1272,12 +1414,12 @@ namespace EtlGate.Tests
 
 				const bool supportQuotedFields = true;
 				var expected = new[]
+				               {
+					               new List<string>
 					               {
-						               new List<string>
-							               {
-								               ",\n\n\r\ra\na\n"
-							               }
-					               };
+						               ",\n\n\r\ra\na\n"
+					               }
+				               };
 				var result = GetExpected(input, fieldSeparator, supportQuotedFields).ToList();
 
 				CheckGetExpectedResult(result, expected);
@@ -1394,16 +1536,16 @@ namespace EtlGate.Tests
 									if (fieldSeparator.Length < recordSeparator.Length)
 									{
 										if (rowText.Length > i + recordSeparator.Length &&
-										    rowText.Substring(i + 1, recordSeparator.Length) == recordSeparator)
+											rowText.Substring(i + 1, recordSeparator.Length) == recordSeparator)
 										{
 											rowText = rowText.Substring(i + 1);
 											foundEnd = true;
 											break;
 										}
 										if (fieldSeparator.Length > 0 &&
-										    !fieldSeparator.StartsWith("\"") &&
-										    rowText.Length > i + fieldSeparator.Length &&
-										    rowText.Substring(i + 1, fieldSeparator.Length) == fieldSeparator)
+											!fieldSeparator.StartsWith("\"") &&
+											rowText.Length > i + fieldSeparator.Length &&
+											rowText.Substring(i + 1, fieldSeparator.Length) == fieldSeparator)
 										{
 											rowText = rowText.Substring(i + 1);
 											foundEnd = true;
@@ -1414,9 +1556,9 @@ namespace EtlGate.Tests
 									else
 									{
 										if (fieldSeparator.Length > 0 &&
-										    !fieldSeparator.StartsWith("\"") &&
-										    rowText.Length > i + fieldSeparator.Length &&
-										    rowText.Substring(i + 1, fieldSeparator.Length) == fieldSeparator)
+											!fieldSeparator.StartsWith("\"") &&
+											rowText.Length > i + fieldSeparator.Length &&
+											rowText.Substring(i + 1, fieldSeparator.Length) == fieldSeparator)
 										{
 											rowText = rowText.Substring(i + 1);
 											foundEnd = true;
@@ -1424,7 +1566,7 @@ namespace EtlGate.Tests
 											break;
 										}
 										if (rowText.Length > i + recordSeparator.Length &&
-										    rowText.Substring(i + 1, recordSeparator.Length) == recordSeparator)
+											rowText.Substring(i + 1, recordSeparator.Length) == recordSeparator)
 										{
 											rowText = rowText.Substring(i + 1);
 											foundEnd = true;

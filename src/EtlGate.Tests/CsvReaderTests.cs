@@ -16,6 +16,148 @@ namespace EtlGate.Tests
 	public class CsvReaderTests
 	{
 		[TestFixture]
+		public class When_asked_to_read_from_stream__validation
+		{
+			private CsvReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNamedFieldConverters)]
+			public void Given_hasHeaderRow_is_false__should_throw_an_ArgumentException()
+			{
+				var stream = new MemoryStream();
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFrom(stream, namedFieldConverters: new Dictionary<string, Func<string, object>>()).ToList();
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorBothNamedAndIndexedFieldConverters)]
+			public void Given_both_namedFieldConverters_and_indexedFieldConverts_are_given__should_throw_an_ArgumentException()
+			{
+				var stream = new MemoryStream();
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFrom(stream, hasHeaderRow: true, namedFieldConverters: new Dictionary<string, Func<string, object>>(), indexedFieldConverters: new Dictionary<int, Func<string, object>>()).ToList();
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			public void Given_a_null_stream__should_throw_an_ArgumentException()
+			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFrom(null, hasHeaderRow: true).ToList();
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_without_headers__validation
+		{
+			private CsvReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			public void Given_a_null_stream__should_throw_an_ArgumentException()
+			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFromWithoutHeaders(null).ToList();
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_with_headers__validation
+		{
+			private CsvReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
+			}
+
+			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			public void Given_a_null_stream__should_throw_an_ArgumentException()
+			{
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				_reader.ReadFromWithHeaders(null).ToList();
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_with_headers_and_field_converters
+		{
+			private CsvReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
+			}
+
+			[Test]
+			public void Given_a_named_converter__Should_store_the_converted_field_value()
+			{
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"a
+1"));
+				var namedFieldConverters = new Dictionary<string, Func<string, object>>
+				                           {
+					                           { "a", x => Int32.Parse(x) }
+				                           };
+				var result = _reader.ReadFromWithHeaders(stream, namedFieldConverters: namedFieldConverters).ToList();
+				var value = result[0].GetField<int>("a");
+				value.ShouldBeEqualTo(1);
+			}
+
+			[Test]
+			public void Given_a_named_converter_for_a_field_not_in_the_headers__Should_ignore_it_but_use_ones_that_do_match()
+			{
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"a
+1"));
+				var namedFieldConverters = new Dictionary<string, Func<string, object>>
+				                             {
+					                             { "a", x => Int32.Parse(x) },
+					                             { "unknown", x => Int32.Parse(x) }
+				                             };
+				var result = _reader.ReadFromWithHeaders(stream, namedFieldConverters: namedFieldConverters).ToList();
+				var value = result[0].GetField<int>("a");
+				value.ShouldBeEqualTo(1);
+			}
+		}
+
+		[TestFixture]
+		public class When_asked_to_read_from_without_headers_but_with_field_converters
+		{
+			private CsvReader _reader;
+
+			[SetUp]
+			public void Before_each_test()
+			{
+				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
+			}
+
+			[Test]
+			public void Given_an_indexed_converter__Should_store_the_converted_field_value()
+			{
+				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"1"));
+				var indexedFieldConverters = new Dictionary<int, Func<string, object>>
+				                             {
+					                             { 0, x => Int32.Parse(x) }
+				                             };
+				var result = _reader.ReadFromWithoutHeaders(stream, indexedFieldConverters: indexedFieldConverters).ToList();
+				var value = result[0].GetField<int>(0);
+				value.ShouldBeEqualTo(1);
+			}
+		}
+
+		[TestFixture]
 		public class When_asked_to_read_from_a_stream
 		{
 			private CsvReader _reader;
