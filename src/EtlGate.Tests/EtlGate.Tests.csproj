@@ -65,7 +65,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\JetBrains.Annotations.10.0.0\lib\net20\JetBrains.Annotations.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="MvbaCore">
       <HintPath>..\..\lib\MvbaCore\MvbaCore.dll</HintPath>
     </Reference>

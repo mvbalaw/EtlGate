@@ -164,6 +164,23 @@ namespace EtlGate.Tests
 				Check(records, hasHeaderRow, expected);
 			}
 
+			[Test, Ignore]
+			public void Writing_10000000_rows_should_be_fast()
+			{
+				var count = 1;
+				var headings = "abcdefghijklmnopqrstuvwxyz".Split();
+				var headingsDict = Enumerable.Range(0, headings.Length)
+					.ToDictionary(headingIndex => headings[headingIndex], fieldIndex => fieldIndex);
+				var records = Enumerable.Range(0, 10000000)
+					.Select(x => new Record(headings.Select(y => count++.ToString()), headingsDict));
+				using (var stream = new MemoryStream())
+				{
+					var writer = new StreamWriter(stream);
+					_writer.WriteTo(writer, records, true);
+					writer.Flush();
+				}
+			}
+
 			private void Check(IEnumerable<Record> records, bool hasHeader, string expectedValue)
 			{
 				using (var stream = new MemoryStream())

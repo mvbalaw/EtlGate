@@ -15,11 +15,17 @@ namespace EtlGate
 	{
 		private static void WriteList(IEnumerable<string> values, TextWriter writer, string fieldDelimiter, string recordDelimiter)
 		{
-			var valueStream = values.Memoize(1);
-			writer.Write(Csv.Escape(valueStream.First()));
-			foreach (var field in valueStream.Skip(1))
+			bool first = true;
+			foreach (var field in values)
 			{
-				writer.Write(fieldDelimiter);
+				if (!first)
+				{
+					writer.Write(fieldDelimiter);
+				}
+				else
+				{
+					first = false;
+				}
 				writer.Write(Csv.Escape(field));
 			}
 			writer.Write(recordDelimiter);
@@ -39,18 +45,16 @@ namespace EtlGate
 			const string fieldDelimiter = ",";
 			const string recordDelimiter = "\r\n";
 
-			var recordStream = records.Memoize(1);
-
-			if (includeHeaders)
+			foreach (var record in records)
 			{
-				WriteList(recordStream.First().HeadingFieldNames, writer, fieldDelimiter, recordDelimiter);
-			}
-
-			foreach (var rowValues in recordStream.Select(record => Enumerable
-				                                                        .Range(0, record.FieldCount)
-				                                                        .Select(record.GetField)))
-			{
-				WriteList(rowValues, writer, fieldDelimiter, recordDelimiter);
+				if (includeHeaders)
+				{
+					WriteList(record.HeadingFieldNames, writer, fieldDelimiter, recordDelimiter);
+					includeHeaders = false;
+				}
+				WriteList(Enumerable
+					.Range(0, record.FieldCount)
+					.Select(record.GetField), writer, fieldDelimiter, recordDelimiter);
 			}
 		}
 
