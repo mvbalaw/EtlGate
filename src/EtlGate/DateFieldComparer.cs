@@ -17,9 +17,18 @@ namespace EtlGate
 		public string FieldName { get; private set; }
 
 		[Pure]
-		public int Compare([NotNull] string field1Value, [NotNull] string field2Value)
+		public int Compare(string field1Value, string field2Value)
 		{
-			if ((field1Value == "") && (field2Value == ""))
+			if (field1Value == null || field2Value == null)
+			{
+				if (field1Value == field2Value)
+				{
+					return 0;
+				}
+				return field1Value == null ? 1 : -1;
+			}
+
+			if (field1Value == "" && field2Value == "")
 			{
 				return 0;
 			}

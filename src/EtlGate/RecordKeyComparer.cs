@@ -19,8 +19,16 @@ namespace EtlGate
 		}
 
 		[Pure]
-		public int Compare([NotNull] Record record1, [NotNull] Record record2)
+		public int Compare(Record record1, Record record2)
 		{
+			if (record1 == null || record2 == null)
+			{
+				if (record1 == record2)
+				{
+					return 0;
+				}
+				return record1 == null ? 1 : -1;
+			}
 			var result = _fieldComparersInOrder
 				.Select(x => x.Compare(record1.GetField(x.FieldName), record2.GetField(x.FieldName)))
 				.FirstOrDefault(x => x != 0);
