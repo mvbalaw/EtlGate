@@ -95,7 +95,7 @@ namespace EtlGate
 				                   Capture = new StringBuilder(),
 				                   NamedFieldConverters = namedFieldConverters,
 				                   IndexedFieldConverters = indexedFieldConverters,
-				                   StringCache = new Dictionary<string, string>()
+				                   StringCache = new Dictionary<string, object>()
 			                   };
 			var specialTokens = new List<string>();
 			if (!String.IsNullOrEmpty(fieldSeparator))
@@ -151,22 +151,32 @@ namespace EtlGate
 
 		private static void AddFieldValue(ICollection<object> fieldValues, ParseContext parseContext)
 		{
-			var strValue = parseContext.Capture.ToString();
-			string cachedStrValue;
-			if (!parseContext.StringCache.TryGetValue(strValue, out cachedStrValue))
-			{
-				parseContext.StringCache.Add(strValue, strValue);
-				cachedStrValue = strValue;
-			}
-
-			object convertedValue = cachedStrValue;
+			object convertedValue;
 			if (!parseContext.ReadingHeaderRow && parseContext.IndexedFieldConverters != null)
 			{
-				Func<string, object> converter;
-				if (parseContext.IndexedFieldConverters.TryGetValue(fieldValues.Count, out converter))
+				var strValue = parseContext.Capture.ToString();
+				object cachedStrValue;
+				if (!parseContext.StringCache.TryGetValue(strValue, out cachedStrValue))
 				{
-					convertedValue = converter(cachedStrValue);
+					Func<string, object> converter;
+					if (parseContext.IndexedFieldConverters.TryGetValue(fieldValues.Count, out converter))
+					{
+						convertedValue = converter(strValue);
+						parseContext.StringCache.Add(strValue, convertedValue);
+					}
+					else
+					{
+						convertedValue = strValue;
+					}
 				}
+				else
+				{
+					convertedValue = cachedStrValue;
+				}
+			}
+			else
+			{
+				convertedValue = parseContext.Capture.ToString();
 			}
 			fieldValues.Add(convertedValue);
 			parseContext.Capture.Length = 0;
@@ -401,7 +411,7 @@ namespace EtlGate
 			var fieldSeparator = parseContext.FieldSeparator;
 			var recordSeparator = parseContext.RecordSeparator;
 
-			if (recordSeparator.Length > 0 && fieldSeparator[0].Equals(recordSeparator[0]) && recordSeparator.Length > fieldSeparator.Length)
+			if (recordSeparator.Length > fieldSeparator.Length && fieldSeparator[0].Equals(recordSeparator[0]))
 			{
 				parseContext.Handle = ContinueCollectRecordSeparator;
 			}
@@ -462,7 +472,7 @@ namespace EtlGate
 			public bool SupportQuotedFields { get; set; }
 			public IDictionary<string, Func<string, object>> NamedFieldConverters { get; set; }
 			public IDictionary<int, Func<string, object>> IndexedFieldConverters { get; set; }
-			public Dictionary<string, string> StringCache { get; set; }
+			public Dictionary<string, object> StringCache { get; set; }
 
 			public void IncrementFieldNumber()
 			{
