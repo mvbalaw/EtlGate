@@ -109,7 +109,7 @@ namespace EtlGate.Tests
 1"));
 				var namedFieldConverters = new Dictionary<string, Func<string, object>>
 				                           {
-					                           { "a", x => Int32.Parse(x) }
+					                           { "a", x => int.Parse(x) }
 				                           };
 				var result = _reader.ReadFromWithHeaders(stream, namedFieldConverters: namedFieldConverters).ToList();
 				var value = result[0].GetField<int>("a");
@@ -123,8 +123,8 @@ namespace EtlGate.Tests
 1"));
 				var namedFieldConverters = new Dictionary<string, Func<string, object>>
 				                             {
-					                             { "a", x => Int32.Parse(x) },
-					                             { "unknown", x => Int32.Parse(x) }
+					                             { "a", x => int.Parse(x) },
+					                             { "unknown", x => int.Parse(x) }
 				                             };
 				var result = _reader.ReadFromWithHeaders(stream, namedFieldConverters: namedFieldConverters).ToList();
 				var value = result[0].GetField<int>("a");
@@ -149,7 +149,7 @@ namespace EtlGate.Tests
 				var stream = new MemoryStream(Encoding.ASCII.GetBytes(@"1"));
 				var indexedFieldConverters = new Dictionary<int, Func<string, object>>
 				                             {
-					                             { 0, x => Int32.Parse(x) }
+					                             { 0, x => int.Parse(x) }
 				                             };
 				var result = _reader.ReadFromWithoutHeaders(stream, indexedFieldConverters: indexedFieldConverters).ToList();
 				var value = result[0].GetField<int>(0);

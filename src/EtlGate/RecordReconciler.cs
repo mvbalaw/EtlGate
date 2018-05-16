@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -38,7 +37,7 @@ namespace EtlGate
 				return false;
 			}
 
-			return oldItemKeys.All(k => String.CompareOrdinal(oldItem.GetField(k), newItem.GetField(k)) == 0);
+			return oldItemKeys.All(k => string.CompareOrdinal(oldItem.GetField(k), newItem.GetField(k)) == 0);
 		}
 	}
 }

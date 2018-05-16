@@ -98,11 +98,11 @@ namespace EtlGate
 				                   StringCache = new Dictionary<string, object>()
 			                   };
 			var specialTokens = new List<string>();
-			if (!String.IsNullOrEmpty(fieldSeparator))
+			if (!string.IsNullOrEmpty(fieldSeparator))
 			{
 				specialTokens.Add(fieldSeparator);
 			}
-			if (!String.IsNullOrEmpty(recordSeparator))
+			if (!string.IsNullOrEmpty(recordSeparator))
 			{
 				specialTokens.Add(recordSeparator);
 			}
@@ -221,7 +221,7 @@ namespace EtlGate
 			var uniqueHeaderLookup = new HashSet<string>();
 			foreach (var field in fieldValues.Where(field => !uniqueHeaderLookup.Add(field)))
 			{
-				throw new ParseException(String.Format(ErrorDuplicateHeaderFieldName, field));
+				throw new ParseException(string.Format(ErrorDuplicateHeaderFieldName, field));
 			}
 		}
 

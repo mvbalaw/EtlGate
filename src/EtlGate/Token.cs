@@ -1,6 +1,4 @@
-﻿using System;
-
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 
 namespace EtlGate
 {
@@ -45,7 +43,7 @@ namespace EtlGate
 		[NotNull]
 		public string Value
 		{
-			[Pure] get { return _value ?? (_value = new String(_source, _start, _length)); }
+			[Pure] get { return _value ?? (_value = new string(_source, _start, _length)); }
 		}
 	}
 

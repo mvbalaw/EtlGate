@@ -401,7 +401,7 @@ namespace EtlGate.Tests
 			[Test]
 			public void Given_an_empty_stream__should_return_an_empty_IEnumerable()
 			{
-				var input = String.Empty;
+				var input = string.Empty;
 				var memoryStream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _tokenizer.Tokenize(memoryStream, new char[] { }).ToList();
 				result.Count.ShouldBeEqualTo(1);
@@ -453,12 +453,12 @@ namespace EtlGate.Tests
 				catch (Exception exception)
 				{
 					Console.WriteLine("input: " + new string(input).Substring(0, Math.Min(input.Length, saved.Length + holding.Length + 10)));
-					Console.WriteLine("commands: " + new String(commands).Substring(0, Math.Min(commands.Length, commandIndex + 10)));
+					Console.WriteLine("commands: " + new string(commands).Substring(0, Math.Min(commands.Length, commandIndex + 10)));
 					Console.WriteLine(exception);
 					Assert.Fail(exception.Message);
 				}
 				saved.Append(holding);
-				var expected = new String(input);
+				var expected = new string(input);
 				saved.ToString().ShouldBeEqualTo(expected);
 			}
 		}
@@ -499,8 +499,8 @@ namespace EtlGate.Tests
 					{
 						anyBreakage = true;
 						Console.WriteLine("const string input = \"" + input + "\";");
-						Console.WriteLine("var specialTokens = new[] { \"" + String.Join("\", \"", specials) + "\" };");
-						Console.WriteLine("var expected = new Token[] { " + String.Join(", ", expect.Select(x => "new " + x.GetType() + "( \"" + x.Value + "\")")) + " };");
+						Console.WriteLine("var specialTokens = new[] { \"" + string.Join("\", \"", specials) + "\" };");
+						Console.WriteLine("var expected = new Token[] { " + string.Join(", ", expect.Select(x => "new " + x.GetType() + "( \"" + x.Value + "\")")) + " };");
 						Console.WriteLine("exception: " + e.Message);
 					}
 				}
@@ -940,7 +940,7 @@ namespace EtlGate.Tests
 
 			private static void CompareResultWithExpected(IList<Token> result, IList<Token> expect)
 			{
-				result.Count.ShouldBeEqualTo(expect.Count + 1, "expected " + (1 + expect.Count) + " tokens but received " + result.Count + ": \"" + String.Join("\", \"", result.Select(x => x.Value).ToArray()) + "\"");
+				result.Count.ShouldBeEqualTo(expect.Count + 1, "expected " + (1 + expect.Count) + " tokens but received " + result.Count + ": \"" + string.Join("\", \"", result.Select(x => x.Value).ToArray()) + "\"");
 				result.Last().GetType().ShouldBeEqualTo(typeof(EndOfStreamToken));
 				for (var i = 0; i < result.Count - 1; i++)
 				{

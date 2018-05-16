@@ -274,7 +274,7 @@ namespace EtlGate.Tests
 
 				var headings = Enumerable
 					.Range(0, numberOfHeadings)
-					.Select(i => String.Format("Field {0}", i))
+					.Select(i => string.Format("Field {0}", i))
 					.ToList();
 
 				var records = new List<Record>();
@@ -293,7 +293,7 @@ namespace EtlGate.Tests
 						}
 						else
 						{
-							fields.Add(String.Format("Simple Value" + iField));
+							fields.Add(string.Format("Simple Value" + iField));
 						}
 					}
 					records.Add(new Record(fields, headings));

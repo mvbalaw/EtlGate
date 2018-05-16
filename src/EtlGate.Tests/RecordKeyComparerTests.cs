@@ -70,8 +70,8 @@ namespace EtlGate.Tests
 							continue;
 						}
 
-						Console.WriteLine("fields:	  " + new String(fieldNames));
-						Console.WriteLine("comparers: " + new String(fieldNames));
+						Console.WriteLine("fields:	  " + new string(fieldNames));
+						Console.WriteLine("comparers: " + new string(fieldNames));
 						Console.WriteLine(exception);
 					}
 				}
