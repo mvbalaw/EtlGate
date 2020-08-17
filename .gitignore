@@ -21,3 +21,4 @@ src/packages
 src/*.Tests/FluentAssert.*
 *.DotSettings
 .vs/
+settings/build.yaml
