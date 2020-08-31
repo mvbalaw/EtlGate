@@ -47,7 +47,9 @@ namespace EtlGate.Tests.Extensions
 				private IList<int> _input;
 				private List<LinkedListNode<int>> _result;
 
+#pragma warning disable 618
 				[TestFixtureSetUp]
+#pragma warning restore 618
 				public void Before_first_test()
 				{
 					_input = new[] { 1, 2 };
@@ -59,9 +61,8 @@ namespace EtlGate.Tests.Extensions
 				{
 					var linkedListNode = _result.First().Next;
 					linkedListNode.ShouldNotBeNull();
-// ReSharper disable PossibleNullReferenceException
+					// ReSharper disable once PossibleNullReferenceException
 					linkedListNode.Value.ShouldBeEqualTo(_input.Last());
-// ReSharper restore PossibleNullReferenceException
 				}
 
 				[Test]
@@ -69,9 +70,8 @@ namespace EtlGate.Tests.Extensions
 				{
 					var linkedListNode = _result.Last().Previous;
 					linkedListNode.ShouldNotBeNull();
-// ReSharper disable PossibleNullReferenceException
+					// ReSharper disable once PossibleNullReferenceException
 					linkedListNode.Value.ShouldBeEqualTo(_input.First());
-// ReSharper restore PossibleNullReferenceException
 				}
 
 				[Test]

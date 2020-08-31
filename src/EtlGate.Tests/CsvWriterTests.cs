@@ -211,28 +211,26 @@ namespace EtlGate.Tests
 				_writer = new CsvWriter();
 			}
 
-			[Test,ExpectedException(typeof(ArgumentException))]
+			[Test]
 			public void Given_a_null_filename__should_throw_an_ArgumentException()
 			{
 				string fileName = null;
 				var records = new List<Record>();
 				const bool includeHeaders = true;
-
 // ReSharper disable ExpressionIsAlwaysNull
-				_writer.WriteTo(fileName, records, includeHeaders);
+				Assert.Throws<ArgumentException>(() => _writer.WriteTo(fileName, records, includeHeaders));
 // ReSharper restore ExpressionIsAlwaysNull
 				
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException))]
+			[Test]
 			public void Given_a_null_list_of_records__should_throw_an_ArgumentException()
 			{
 				const string fileName = "testfile.csv";
 				IEnumerable<Record> records = null;
 				const bool includeHeaders = true;
-
 // ReSharper disable ExpressionIsAlwaysNull
-				_writer.WriteTo(fileName, records, includeHeaders);
+				Assert.Throws<ArgumentException>(() => _writer.WriteTo(fileName, records, includeHeaders));
 // ReSharper restore ExpressionIsAlwaysNull
 
 			}

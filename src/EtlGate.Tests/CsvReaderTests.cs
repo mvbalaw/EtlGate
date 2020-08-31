@@ -26,28 +26,38 @@ namespace EtlGate.Tests
 				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNamedFieldConverters)]
+			[Test]
 			public void Given_hasHeaderRow_is_false__should_throw_an_ArgumentException()
 			{
 				var stream = new MemoryStream();
-				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFrom(stream, namedFieldConverters: new Dictionary<string, Func<string, object>>()).ToList();
+				var exception = Assert.Throws<ArgumentException>(() =>
+					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+					_reader.ReadFrom(stream, namedFieldConverters: new Dictionary<string, Func<string, object>>())
+						.ToList()
+				);
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNamedFieldConverters);
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorBothNamedAndIndexedFieldConverters)]
+			[Test]
 			public void Given_both_namedFieldConverters_and_indexedFieldConverts_are_given__should_throw_an_ArgumentException()
 			{
 				var stream = new MemoryStream();
-				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFrom(stream, hasHeaderRow: true, namedFieldConverters: new Dictionary<string, Func<string, object>>(), indexedFieldConverters: new Dictionary<int, Func<string, object>>()).ToList();
+				var exception = Assert.Throws<ArgumentException>(() =>
+					// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+					_reader.ReadFrom(stream, hasHeaderRow: true,
+						namedFieldConverters: new Dictionary<string, Func<string, object>>(),
+						indexedFieldConverters: new Dictionary<int, Func<string, object>>()).ToList()
+				);
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorBothNamedAndIndexedFieldConverters);
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			[Test]
 			public void Given_a_null_stream__should_throw_an_ArgumentException()
 			{
 				// ReSharper disable once AssignNullToNotNullAttribute
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFrom(null, hasHeaderRow: true).ToList();
+				var exception = Assert.Throws<ArgumentException>(() =>_reader.ReadFrom(null, hasHeaderRow: true).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNoStream);
 			}
 		}
 
@@ -62,12 +72,12 @@ namespace EtlGate.Tests
 				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			[Test]
 			public void Given_a_null_stream__should_throw_an_ArgumentException()
 			{
 				// ReSharper disable once AssignNullToNotNullAttribute
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFromWithoutHeaders(null).ToList();
+				Assert.Throws<ArgumentException>( () => _reader.ReadFromWithoutHeaders(null).ToList());
 			}
 		}
 
@@ -82,12 +92,13 @@ namespace EtlGate.Tests
 				_reader = new CsvReader(new DelimitedDataReader(new StreamTokenizer()));
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			[Test]
 			public void Given_a_null_stream__should_throw_an_ArgumentException()
 			{
 				// ReSharper disable once AssignNullToNotNullAttribute
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFromWithHeaders(null).ToList();
+				var exception = Assert.Throws<ArgumentException>(() => _reader.ReadFromWithHeaders(null).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNoStream);
 			}
 		}
 
@@ -214,14 +225,11 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException))]
 			public void Given_a_null_stream__should_throw_an_exception()
 			{
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-// ReSharper disable AssignNullToNotNullAttribute
-				_reader.ReadFrom(null).ToList();
-// ReSharper restore AssignNullToNotNullAttribute
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				Assert.Throws<ArgumentException>( () =>_reader.ReadFrom(null).ToList());
 			}
 
 			[Test]
@@ -248,19 +256,19 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_COMMA_RETURN_QUOTE_RETURN_a__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\",\r\"\ra";
-				Check(input, new Record[] { });
+				var exception = Assert.Throws<ParseException>(() => Check(input, new Record[] { }));
+				exception.Message.ShouldBeEqualTo("Unescaped '\"' on line 1 field 1");
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Quoted field does not have a close quote on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_COMMA_a__should_throw_a_parse_exception_due_to_unclosed_quote()
 			{
 				const string input = "\",a";
-				Check(input, new Record[] { });
+				var exception = Assert.Throws<ParseException>(() =>Check(input, new Record[] { }));
+				exception.Message.ShouldBeEqualTo("Quoted field does not have a close quote on line 1 field 1");
 			}
 
 			[Test]
@@ -277,32 +285,30 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_QUOTE_RETURN_QUOTE__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"\"\r\"";
-				Check(input, new Record[] { });
+				var exception = Assert.Throws<ParseException>( () => Check(input, new Record[] { }));
+				exception.Message.ShouldBeEqualTo("Unescaped '\"' on line 1 field 1");
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_QUOTE_a__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"\"a\",c";
-				Check(input, new Record[] { });
+				var exception = Assert.Throws<ParseException>(() =>Check(input, new Record[] { }));
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_RETURN_NEWLINE_QUOTE_RETURN__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"\r\n\"\r";
-				Check(input, new[]
-					             {
-						             new Record(
-							             "\r\n\"\r"
-							             )
-					             });
+				var exception = Assert.Throws<ParseException>(() => Check(input, new[]
+									{
+										new Record("\r\n\"\r")
+
+									}));
+				exception.Message.ShouldBeEqualTo("Unescaped '\"' on line 1 field 1");
 			}
 
 			[Test]
@@ -332,16 +338,16 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_a_QUOTE_RETURN_RETURN_NEWLINE_a_COMMA_aa__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"a\"\r\r\na,aa";
-				Check(input, new[]
+				var exception = Assert.Throws<ParseException>(() =>Check(input, new[]
 					             {
 						             new Record(
 							             "a\"\r\r\na,aa"
 							             )
-					             });
+					             }));
+				exception.Message.ShouldBeEqualTo("Unescaped '\"' on line 1 field 1");
 			}
 
 			[Test]
@@ -559,17 +565,15 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__x__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				//",,"RETURN,,aaa
 				const string input = "\",,\"\r,,aaa";
-				Check(input, new[]
+				var exception = Assert.Throws<ParseException>(()=> Check(input, new[]
 					             {
-						             new Record(
-							             ",,"
-							             )
-					             });
+						             new Record(",,")
+					             }));
+				exception.Message.ShouldBeEqualTo("Unescaped '\"' on line 1 field 1");
 			}
 
 			[Test]

@@ -25,7 +25,6 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = OrderedReconciler<string>.ErrorNotSortedMessage)]
 			public void Given_left_not_sorted_and_right_empty__should_throw_argument_exception_on_unsorted_enumerable()
 			{
 				var left = new List<KeyValuePair<int, char>>();
@@ -33,15 +32,12 @@ namespace EtlGate.Tests
 
 				left.Add(new KeyValuePair<int, char>(4, 'D'));
 				left.Add(new KeyValuePair<int, char>(3, 'C'));
-
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				_comparer.Reconcile(left, right, GetState).ToList();
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
-
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentException>(() => _comparer.Reconcile(left, right, GetState).ToList());
+				exception.Message.ShouldBeEqualTo(OrderedReconciler<string>.ErrorNotSortedMessage);
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = OrderedReconciler<string>.ErrorNotSortedMessage)]
 			public void Given_left_empty_and_right_not_sorted__should_throw_argument_exception_on_unsorted_enumerable()
 			{
 				var left = new List<KeyValuePair<int, char>>();
@@ -51,15 +47,14 @@ namespace EtlGate.Tests
 					new KeyValuePair<int, char>(3, 'C')
 				};
 
-				// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				_comparer.Reconcile(left, right, GetState).ToList();
-				// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentException>(() => _comparer.Reconcile(left, right, GetState).ToList());
+				exception.Message.ShouldBeEqualTo(OrderedReconciler<string>.ErrorNotSortedMessage);
 
 			}
 
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = OrderedReconciler<string>.ErrorNotSortedMessage)]
 			public void Given_left_has_items_and_right_not_sorted__should_throw_argument_exception_on_unsorted_enumerable()
 			{
 				var left = new List<KeyValuePair<int, char>>();
@@ -70,14 +65,12 @@ namespace EtlGate.Tests
 				right.Add(new KeyValuePair<int, char>(2, 'B'));
 				right.Add(new KeyValuePair<int, char>(1, 'A'));
 
-				// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				_comparer.Reconcile(left, right, GetState).ToList();
-				// ReSharper restore ReturnValueOfPureMethodIsNotUsed
-
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentException>( ()=>_comparer.Reconcile(left, right, GetState).ToList());
+				exception.Message.ShouldBeEqualTo(OrderedReconciler<string>.ErrorNotSortedMessage);
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = OrderedReconciler<string>.ErrorNotSortedMessage)]
 			public void Given_left_not_sorted_and_right_has_items__should_throw_argument_exception_on_unsorted_enumerable()
 			{
 				var left = new List<KeyValuePair<int, char>>();
@@ -88,10 +81,9 @@ namespace EtlGate.Tests
 				right.Add(new KeyValuePair<int, char>(3, 'C'));
 				right.Add(new KeyValuePair<int, char>(4, 'D'));
 
-				// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				_comparer.Reconcile(left, right, GetState).ToList();
-				// ReSharper restore ReturnValueOfPureMethodIsNotUsed
-
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentException>(()=> _comparer.Reconcile(left, right, GetState).ToList());
+				exception.Message.ShouldBeEqualTo(OrderedReconciler<string>.ErrorNotSortedMessage);
 			}
 
 			[Test]

@@ -66,13 +66,12 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = "foo" + Record.ErrorFieldNameIsNotAValidHeaderForThisRecordMessage + "\r\nParameter name: name")]
 			public void Given_an_invalid_heading_name__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, new Dictionary<string, int>());
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				record.GetField("foo");
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentException>(() => record.GetField("foo"));
+				exception.Message.ShouldBeEqualTo("foo" + Record.ErrorFieldNameIsNotAValidHeaderForThisRecordMessage + "\r\nParameter name: name");
 			}
 
 			[Test]
@@ -100,21 +99,21 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = "a" + Record.ErrorFieldNameIsNotAValidHeaderForThisRecordMessage + "\r\n" + "Parameter name: name")]
 			public void Given_a_reference_Type_to_which_to_cast_the_value_and_the_requested_field_does_not_exist__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, new Dictionary<string, int>());
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				record.GetField<string>("a");
+				var exception = Assert.Throws<ArgumentException>(() => record.GetField("a"));
+				exception.Message.ShouldBeEqualTo("a"+ Record.ErrorFieldNameIsNotAValidHeaderForThisRecordMessage + "\r\nParameter name: name");
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = "a" + Record.ErrorFieldNameIsNotAValidHeaderForThisRecordMessage + "\r\n" + "Parameter name: name")]
 			public void Given_a_value_Type_to_which_to_cast_the_value_and_the_requested_field_does_not_exist__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, new Dictionary<string, int>());
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				record.GetField<int>("a");
+				var exception = Assert.Throws<ArgumentException>(() => record.GetField("a"));
+				exception.Message.ShouldBeEqualTo("a" + Record.ErrorFieldNameIsNotAValidHeaderForThisRecordMessage + "\r\nParameter name: name");
 			}
 
 			[Test]
@@ -126,12 +125,13 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(InvalidCastException), ExpectedMessage = "Field 'a' value cannot be cast to Int32: 1.12")]
 			public void Given_a_Type_to_which_to_cast_the_value_that_does_not_match_the_type_of_the_value__Should_throw_an_exception()
 			{
 				var record = Record.For(new object[] { 1.12 }, "a");
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				record.GetField<int>("a");
+				var exception = Assert.Throws<InvalidCastException>(() => record.GetField<int>("a"));
+				exception.Message.ShouldBeEqualTo("Field 'a' value cannot be cast to Int32: 1.12");
+
 			}
 		}
 
@@ -139,13 +139,12 @@ namespace EtlGate.Tests
 		public class When_asked_for_a_field_by_index
 		{
 			[Test]
-			[ExpectedException(typeof(ArgumentOutOfRangeException), ExpectedMessage = Record.ErrorFieldIndexMustBeNonNegativeMessage + "\r\nParameter name: zeroBasedIndex")]
 			public void Given_a_negative_index_value__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, new Dictionary<string, int>());
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				record.GetField(-1);
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentOutOfRangeException>(() => record.GetField(-1));
+				exception.Message.ShouldBeEqualTo(Record.ErrorFieldIndexMustBeNonNegativeMessage + "\r\nParameter name: zeroBasedIndex");
 			}
 
 			[Test]
@@ -157,12 +156,12 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = "10" + Record.ErrorFieldNumberIsNotAValidFieldForThisRecordMessage)]
 			public void Given_index_value_exceeds_available_number_of_fields__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, "a", "b");
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				record.GetField(10);
+				var exception = Assert.Throws<ArgumentException>(() => record.GetField(10));
+				exception.Message.ShouldBeEqualTo("10" + Record.ErrorFieldNumberIsNotAValidFieldForThisRecordMessage);
 			}
 
 			[Test]
@@ -190,12 +189,12 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = "10"+Record.ErrorFieldNumberIsNotAValidFieldForThisRecordMessage)]
 			public void Given_a_reference_Type_to_which_to_cast_the_value_and_the_index_value_exceeds_available_number_of_fields__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, new Dictionary<string, int>());
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				record.GetField<string>(10);
+				var exception = Assert.Throws<ArgumentException>(() => record.GetField<string>(10));
+				exception.Message.ShouldBeEqualTo("10" + Record.ErrorFieldNumberIsNotAValidFieldForThisRecordMessage);
 			}
 
 			[Test]
@@ -207,21 +206,22 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException), ExpectedMessage = "10" + Record.ErrorFieldNumberIsNotAValidFieldForThisRecordMessage)]
 			public void Given_a_value_Type_to_which_to_cast_the_value_and_the_index_value_exceeds_available_number_of_fields__should_throw_an_exception()
 			{
 				var record = new Record(new string[] { }, new Dictionary<string, int>());
-				var field = record.GetField<int>(10);
-				field.ShouldBeEqualTo(0);
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentException>(() => record.GetField<int>(10));
+				exception.Message.ShouldBeEqualTo("10" +Record.ErrorFieldNumberIsNotAValidFieldForThisRecordMessage);
 			}
 
 			[Test]
-			[ExpectedException(typeof(InvalidCastException), ExpectedMessage = "Field 0 value cannot be cast to Int32: 1.12")]
 			public void Given_a_Type_to_which_to_cast_the_value_that_does_not_match_the_value_type__Should_throw_an_exception()
 			{
 				var record = Record.For(new object[] { 1.12m });
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				record.GetField<int>(0);
+				var exception = Assert.Throws<InvalidCastException>(() => record.GetField<int>(0));
+				exception.Message.ShouldBeEqualTo("Field 0 value cannot be cast to Int32: 1.12");
+
 			}
 		}
 
@@ -229,13 +229,13 @@ namespace EtlGate.Tests
 		public class When_asked_if_the_record_has_a_field_by_index
 		{
 			[Test]
-			[ExpectedException(typeof(ArgumentOutOfRangeException), ExpectedMessage = Record.ErrorFieldIndexMustBeNonNegativeMessage + "\r\nParameter name: zeroBasedIndex")]
 			public void Given_a_negative_field_number_is_requested__should_throw_ArgumentOutOfRangeException()
 			{
 				var record = new Record("x");
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-				record.HasField(-1);
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				var exception = Assert.Throws<ArgumentOutOfRangeException>(() => record.HasField(-1));
+				exception.Message.ShouldBeEqualTo(Record.ErrorFieldIndexMustBeNonNegativeMessage +
+				                                  "\r\nParameter name: zeroBasedIndex");
 			}
 
 			[Test]

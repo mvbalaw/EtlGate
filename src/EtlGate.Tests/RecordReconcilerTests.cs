@@ -243,7 +243,6 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(InvalidOperationException), ExpectedMessage = DateFieldComparer.ErrorField1HasInvalidDateValue)]
 			public void Given_two_Records_with_first_having_invalid_DelinquencyDate_field__should_throw_InvalidOperationException()
 			{
 				var first = new Dictionary<string, string> { { "ACCOUNT_NUMBER", "1" }, { "TAX_YEAR", "2013" }, { "SUBJURISDICTION_CODE", "999" }, { "DELINQUENCY_DATE", "Invalid date" },
@@ -253,14 +252,12 @@ namespace EtlGate.Tests
 				var firstRecord = CreateRecordFromDictionary(first);
 				var secondRecord = CreateRecordFromDictionary(second);
 
-				var result = CompareResults(firstRecord, secondRecord);
-
-				result.ShouldBeEqualTo(ReconciliationStatus.Updated);
+				var exception = Assert.Throws<InvalidOperationException>(() => CompareResults(firstRecord, secondRecord));
+				exception.Message.ShouldBeEqualTo(DateFieldComparer.ErrorField1HasInvalidDateValue);
 			}
 
 
 			[Test]
-			[ExpectedException(typeof(InvalidOperationException), ExpectedMessage = DateFieldComparer.ErrorField2HasInvalidDateValue)]
 			public void Given_two_Records_with_second_having_invalid_DelinquencyDate_field__should_throw_InvalidOperationException()
 			{
 				var first = new Dictionary<string, string> { { "ACCOUNT_NUMBER", "1" }, { "TAX_YEAR", "2013" }, { "SUBJURISDICTION_CODE", "999" }, { "DELINQUENCY_DATE", "02/01/2014" },
@@ -270,9 +267,8 @@ namespace EtlGate.Tests
 				var firstRecord = CreateRecordFromDictionary(first);
 				var secondRecord = CreateRecordFromDictionary(second);
 
-				var result = CompareResults(firstRecord, secondRecord);
-
-				result.ShouldBeEqualTo(ReconciliationStatus.Updated);
+				var exception = Assert.Throws<InvalidOperationException>(() => CompareResults(firstRecord, secondRecord));
+				exception.Message.ShouldBeEqualTo(DateFieldComparer.ErrorField2HasInvalidDateValue);
 			}
 
 			private static Record CreateRecordFromDictionary(Dictionary<string, string> dictionary)

@@ -45,25 +45,19 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException))]
 			public void Given_a_null_array_of_special_characters__should_throw_an_argument_exception()
 			{
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-// ReSharper disable AssignNullToNotNullAttribute
-				_tokenizer.Tokenize(new MemoryStream(), (char[])null).ToList();
-// ReSharper restore AssignNullToNotNullAttribute
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				Assert.Throws<ArgumentException>(() => _tokenizer.Tokenize(new MemoryStream(), (char[])null).ToList());
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException))]
 			public void Given_a_null_stream__should_throw_an_argument_exception()
 			{
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-// ReSharper disable AssignNullToNotNullAttribute
-				_tokenizer.Tokenize(null, new char[] { }).ToList();
-// ReSharper restore AssignNullToNotNullAttribute
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				Assert.Throws<ArgumentException>(() => _tokenizer.Tokenize(null, new char[] { }).ToList());
 			}
 
 			[Test]
@@ -469,7 +463,9 @@ namespace EtlGate.Tests
 			private Random _random;
 			private IStreamTokenizer _tokenizer;
 
+#pragma warning disable 618
 			[TestFixtureSetUp]
+#pragma warning restore 618
 			public void Before_first_test()
 			{
 				_tokenizer = new StreamTokenizer();
@@ -508,14 +504,11 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException))]
 			public void Given_a_null_array_of_special_strings__should_throw_an_argument_exception()
 			{
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-// ReSharper disable AssignNullToNotNullAttribute
-				_tokenizer.Tokenize(new MemoryStream(), (string[])null).ToList();
-// ReSharper restore AssignNullToNotNullAttribute
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				Assert.Throws<ArgumentException>(() =>_tokenizer.Tokenize(new MemoryStream(), (string[])null).ToList());
 			}
 
 			[Test]

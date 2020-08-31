@@ -26,28 +26,31 @@ namespace EtlGate.Tests
 				_reader = new DelimitedDataReader(new StreamTokenizer());
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNamedFieldConverters)]
+			[Test]
 			public void Given_hasHeaderRow_is_false__should_throw_an_ArgumentException()
 			{
 				var stream = new MemoryStream();
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFrom(stream, namedFieldConverters:new Dictionary<string, Func<string, object>>()).ToList();
+				var exception = Assert.Throws<ArgumentException>( () => _reader.ReadFrom(stream, namedFieldConverters:new Dictionary<string, Func<string, object>>()).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNamedFieldConverters);
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorBothNamedAndIndexedFieldConverters)]
+			[Test]
 			public void Given_both_namedFieldConverters_and_indexedFieldConverts_are_given__should_throw_an_ArgumentException()
 			{
 				var stream = new MemoryStream();
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFrom(stream, hasHeaderRow:true, namedFieldConverters:new Dictionary<string, Func<string, object>>(), indexedFieldConverters:new Dictionary<int, Func<string, object>>()).ToList();
+				var exception = Assert.Throws<ArgumentException>(() => _reader.ReadFrom(stream, hasHeaderRow:true, namedFieldConverters:new Dictionary<string, Func<string, object>>(), indexedFieldConverters:new Dictionary<int, Func<string, object>>()).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorBothNamedAndIndexedFieldConverters);
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			[Test]
 			public void Given_a_null_stream__should_throw_an_ArgumentException()
 			{
 				// ReSharper disable once AssignNullToNotNullAttribute
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFrom(null, hasHeaderRow:true).ToList();
+				var exception = Assert.Throws<ArgumentException>( () => _reader.ReadFrom(null, hasHeaderRow:true).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNoStream);
 			}
 		}
 
@@ -62,12 +65,13 @@ namespace EtlGate.Tests
 				_reader = new DelimitedDataReader(new StreamTokenizer());
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			[Test]
 			public void Given_a_null_stream__should_throw_an_ArgumentException()
 			{
 				// ReSharper disable once AssignNullToNotNullAttribute
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFromWithoutHeaders(null).ToList();
+				var exception = Assert.Throws<ArgumentException>( () => _reader.ReadFromWithoutHeaders(null).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNoStream);
 			}
 		}
 
@@ -82,12 +86,13 @@ namespace EtlGate.Tests
 				_reader = new DelimitedDataReader(new StreamTokenizer());
 			}
 
-			[Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = DelimitedDataReader.ErrorNoStream)]
+			[Test]
 			public void Given_a_null_stream__should_throw_an_ArgumentException()
 			{
 				// ReSharper disable once AssignNullToNotNullAttribute
 				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
-				_reader.ReadFromWithHeaders(null).ToList();
+				var exception = Assert.Throws<ArgumentException>(() => _reader.ReadFromWithHeaders(null).ToList());
+				exception.Message.ShouldBeEqualTo(DelimitedDataReader.ErrorNoStream);
 			}
 		}
 
@@ -202,14 +207,11 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ArgumentException))]
 			public void Given_a_null_stream__should_throw_an_exception()
 			{
-// ReSharper disable ReturnValueOfPureMethodIsNotUsed
-// ReSharper disable AssignNullToNotNullAttribute
-				_reader.ReadFrom(null).ToList();
-// ReSharper restore AssignNullToNotNullAttribute
-// ReSharper restore ReturnValueOfPureMethodIsNotUsed
+				// ReSharper disable once AssignNullToNotNullAttribute
+				// ReSharper disable once ReturnValueOfPureMethodIsNotUsed
+				Assert.Throws<ArgumentException>(() => _reader.ReadFrom(null).ToList());
 			}
 
 			[Test]
@@ -522,7 +524,6 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Quoted field does not have a close quote on line 3 field 1")]
 			public void Given_a_stream_containing__COMMA_QUOTE_RETURN_NEWLINE_RETURN_QUOTE_RETURN_RETURN_NEWLINE_QUOTE__and_field_separator__NEWLINE_RETURN_RETURN__and_quoted_fields_ARE_supported__should_throw_parse_exception_due_to_unclosed_quote()
 			{
 				const string input = ",\"\r\n\r\"\r\r\n\"";
@@ -540,7 +541,8 @@ namespace EtlGate.Tests
 						               ""
 						               )
 				               };
-				Check(input, expected, fieldSeparator, supportQuotedFields);
+				var exception = Assert.Throws<ParseException>(() => Check(input, expected, fieldSeparator, supportQuotedFields));
+				exception.Message.ShouldBeEqualTo("Quoted field does not have a close quote on line 3 field 1");
 			}
 
 			[Test]
@@ -606,7 +608,6 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Quoted field does not have a close quote on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_COMMA_QUOTE_QUOTE_a__and_field_separator__COMMA_QUOTE__and_quoted_fields_ARE_supported__should_throw_parse_exception_due_to_missing_trailing_quote()
 			{
 				const string input = "\",\"\"a";
@@ -618,11 +619,11 @@ namespace EtlGate.Tests
 						               "\",\"a"
 						               )
 				               };
-				Check(input, expected, fieldSeparator, supportQuotedFields);
+				var exception = Assert.Throws<ParseException>(() => Check(input, expected, fieldSeparator, supportQuotedFields));
+				exception.Message.ShouldBeEqualTo("Quoted field does not have a close quote on line 1 field 1");
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Unescaped '\"' on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_COMMA_QUOTE_RETURN_RETURN_NEWLINE__and_field_separator__a_RETURN_COMMA__and_quoted_fields_ARE_supported__should_throw_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\",\"\r\r\n";
@@ -635,7 +636,8 @@ namespace EtlGate.Tests
 						               "a"
 						               )
 				               };
-				Check(input, expected, fieldSeparator, supportQuotedFields);
+				var exception = Assert.Throws<ParseException>(() => Check(input, expected, fieldSeparator, supportQuotedFields));
+				exception.Message.ShouldBeEqualTo("Unescaped '\"' on line 1 field 1");
 			}
 
 			[Test]
@@ -772,7 +774,6 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Quoted field does not have a close quote on line 1 field 1")]
 			public void Given_a_stream_containing__QUOTE_RETURN_a_RETURN_NEWLINE_RETURN_QUOTE_QUOTE_COMMA_RETURN__and_field_separator__QUOTE_COMMA__and_quoted_fields_ARE_supported__should_throw_a_parse_exception_due_to_missing_close_quote()
 			{
 				const string input = "\"\ra\r\n\r\"\",\r";
@@ -784,7 +785,8 @@ namespace EtlGate.Tests
 						               "\ra\r\n\r\",r"
 						               )
 				               };
-				Check(input, expected, fieldSeparator, supportQuotedFields);
+				var exception = Assert.Throws<ParseException>(() => Check(input, expected, fieldSeparator, supportQuotedFields));
+				exception.Message.ShouldBeEqualTo("Quoted field does not have a close quote on line 1 field 1");
 			}
 
 			[Test]
@@ -919,7 +921,6 @@ namespace EtlGate.Tests
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "Header row must not have more than one field with the same name. 'Field1' appears more than once in the header row.")]
 			public void Given_a_stream_containing_a_header_row__should_throw_ParseException_for_two_header_rows_with_same_name()
 			{
 				const string input = "Field1,Field1\r\nValue1,Value2";
@@ -928,16 +929,17 @@ namespace EtlGate.Tests
 				const bool hasHeaderRow = true;
 				var stream = new MemoryStream(Encoding.ASCII.GetBytes(input));
 				var result = _reader.ReadFrom(stream, fieldSeparator, "\r\n", supportQuotedFields, hasHeaderRow);
-				result.GetEnumerator().MoveNext();
+				var exception = Assert.Throws<ParseException>(() => result.GetEnumerator().MoveNext());
+				exception.Message.ShouldBeEqualTo("Header row must not have more than one field with the same name. 'Field1' appears more than once in the header row.");
 			}
 
 			[Test]
-			[ExpectedException(typeof(ParseException), ExpectedMessage = "field separator and record separator must be different.")]
 			public void Given_field_separator_and_record_separator_are_the_same__should_throw_parse_execption()
 			{
 				const string input = "a";
 				const string fieldSeparator = "\r\n";
-				Check(input, null, fieldSeparator);
+				var exception = Assert.Throws<ParseException>(()=>Check(input, null, fieldSeparator));
+				exception.Message.ShouldBeEqualTo("field separator and record separator must be different.");
 			}
 
 			[Test]
@@ -1656,178 +1658,6 @@ namespace EtlGate.Tests
 
 				return result;
 			}
-
-//			private static IEnumerable<List<Field>> GetExpected(string input, string fieldSeparator, bool quotedFieldsSupported)
-//			{
-//				var result = new List<List<Field>>();
-//				var quoted = false;
-//				var items = new List<Field>();
-//				var item = new Field();
-//				var expectQuote = false;
-//				var haveFieldSeparator0 = false;
-//				var haveReturn = false;
-//				foreach (var ch in input)
-//				{
-//					if (haveReturn && ch == '\n')
-//					{
-//						if (!quotedFieldsSupported || !quoted || expectQuote)
-//						{
-//							items.Add(item);
-//							result.Add(items);
-//							items = new List<Field>();
-//							item = new Field();
-//							quoted = false;
-//							expectQuote = false;
-//							haveReturn = false;
-//							haveFieldSeparator0 = false;
-//							continue;
-//						}
-//					}
-//
-//					if (haveFieldSeparator0 && ch == fieldSeparator[1])
-//					{
-//						if (!quoted)
-//						{
-//							items.Add(item);
-//							item = new Field();
-//							haveFieldSeparator0 = false;
-//							haveReturn = false;
-//							continue;
-//						}
-//						if (expectQuote)
-//						{
-//							items.Add(item);
-//							item = new Field();
-//							quoted = false;
-//							haveReturn = false;
-//							haveFieldSeparator0 = false;
-//							expectQuote = false;
-//							continue;
-//						}
-//					}
-//
-//					if (fieldSeparator.Length > 0 && ch == fieldSeparator[0])
-//					{
-//						if (!quoted && quotedFieldsSupported && ch == '"' && item.Value.Length == 0)
-//						{
-//							item.IsQuoted = true;
-//							quoted = true;
-//							continue;
-//						}
-//						if (haveFieldSeparator0)
-//						{
-//							item.Value += fieldSeparator[0];
-//							haveReturn = false;
-//						}
-//						haveFieldSeparator0 = true;
-//						if (haveReturn)
-//						{
-//							item.Value += "\r";
-//						}
-//
-//						haveReturn = ch == '\r';
-//						continue;
-//					}
-//
-//					if (haveFieldSeparator0)
-//					{
-//						if (expectQuote)
-//						{
-//							item.Value += "\"";
-//							item.ErrorUnescapedQuote = true;
-//							expectQuote = false;
-//						}
-//						item.Value += fieldSeparator[0];
-//						if (quoted && fieldSeparator[0] == '"')
-//						{
-//							item.ErrorUnescapedQuote = true;
-//						}
-//						haveFieldSeparator0 = false;
-//						haveReturn = false;
-//					}
-//					if (haveReturn)
-//					{
-//						if (expectQuote)
-//						{
-//							item.Value += "\"";
-//							item.ErrorUnescapedQuote = true;
-//							expectQuote = false;
-//						}
-//						item.Value += "\r";
-//						haveReturn = false;
-//					}
-//					if (ch == '\r')
-//					{
-//						haveReturn = true;
-//						continue;
-//					}
-//
-//					if (ch == '"' && quoted)
-//					{
-//						if (expectQuote)
-//						{
-//							item.Value += "\"";
-//							expectQuote = false;
-//						}
-//						else
-//						{
-//							expectQuote = true;
-//						}
-//						continue;
-//					}
-//					if (quotedFieldsSupported && ch == '"' && item.Value.Length == 0 && !expectQuote)
-//					{
-//						item.IsQuoted = true;
-//						quoted = true;
-//						continue;
-//					}
-//
-//
-//
-//
-//					if (expectQuote)
-//					{
-//						item.ErrorUnescapedQuote = true;
-//						item.Value += "\"";
-//						expectQuote = false;
-//					}
-//
-//
-//					item.Value += ch;
-//				}
-//				if (haveFieldSeparator0)
-//				{
-//					if (!quoted || fieldSeparator[0] != '"')
-//					{
-//						item.Value += fieldSeparator[0];
-//					}
-//				}
-//				else
-//				{
-//					if (expectQuote)
-//					{
-//						item.Value += "\"";
-//						item.ErrorUnescapedQuote = true;
-//					}
-//					if (haveReturn)
-//					{
-//						item.Value += "\r";
-//					}
-//				}
-//				if (item.Value.Length > 0 || item.IsQuoted)
-//				{
-//					if (quoted)
-//					{
-//						item.ErrorMissingTrailingQuote = true;
-//					}
-//					items.Add(item);
-//				}
-//				if (items.Count > 0)
-//				{
-//					result.Add(items);
-//				}
-//				return result;
-//			}
 		}
 	}
 }
