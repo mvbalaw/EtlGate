@@ -15,8 +15,6 @@ namespace EtlGate.Tests
 		[TestFixture]
 		public class When_asked_to_reconcile_two_Ordered_IEnumerable_of_Record
 		{
-
-			private OrderedRecordReconciler _orderedRecordReconciler;
 			private List<ReconciliationResult<Record>> _expectedList;
 			private List<Record> _newList;
 			private List<Record> _oldList;
@@ -49,7 +47,7 @@ namespace EtlGate.Tests
 			{
 				var dataLoadRecordComparer = new RecordKeyComparer(new StringFieldComparer("ACCOUNT_NUMBER"), new StringFieldComparer("TAX_YEAR"), new StringFieldComparer("SUBJURISDICTION_CODE"), new DateFieldComparer("DELINQUENCY_DATE"));
 
-				var result = _orderedRecordReconciler.Reconcile(_oldList, _newList, new RecordReconciler(), dataLoadRecordComparer);
+				var result = OrderedRecordReconciler.Reconcile(_oldList, _newList, new RecordReconciler(), dataLoadRecordComparer);
 				return result;
 			}
 
@@ -232,7 +230,7 @@ namespace EtlGate.Tests
 				_oldList = new List<Record>();
 				_newList = new List<Record>();
 				_expectedList = new List<ReconciliationResult<Record>>();
-				_orderedRecordReconciler = StructureMap.ObjectFactory.GetInstance<OrderedRecordReconciler>();
+				// _orderedRecordReconciler = StructureMap.ObjectFactory.GetInstance<OrderedRecordReconciler>();
 			}
 
 			private static Record CreateRecordFromDictionary(Dictionary<string, string> dictionary)

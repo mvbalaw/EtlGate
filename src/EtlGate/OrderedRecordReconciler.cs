@@ -2,20 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using JetBrains.Annotations;
-
 namespace EtlGate
 {
-	public interface IOrderedRecordReconciler
-	{
-		[NotNull]
-		IEnumerable<ReconciliationResult<Record>> Reconcile([NotNull] IEnumerable<Record> left, [NotNull] IEnumerable<Record> right, [NotNull] IRecordReconciler recordReconciler, [NotNull] IRecordKeyComparer recordKeyComparer);
-	}
 
-	[UsedImplicitly]
-	public class OrderedRecordReconciler : IOrderedRecordReconciler
+	public static class OrderedRecordReconciler
 	{
-		public IEnumerable<ReconciliationResult<Record>> Reconcile(IEnumerable<Record> left, IEnumerable<Record> right, IRecordReconciler recordReconciler, IRecordKeyComparer recordKeyComparer)
+		public static IEnumerable<ReconciliationResult<Record>> Reconcile(IEnumerable<Record> left, IEnumerable<Record> right, IRecordReconciler recordReconciler, IRecordKeyComparer recordKeyComparer)
 		{
 			if (left == null)
 			{
