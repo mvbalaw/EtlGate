@@ -155,11 +155,9 @@ namespace EtlGate
 			if (!parseContext.ReadingHeaderRow && parseContext.IndexedFieldConverters != null)
 			{
 				var strValue = parseContext.Capture.ToString();
-				object cachedStrValue;
-				if (!parseContext.StringCache.TryGetValue(strValue, out cachedStrValue))
+				if (!parseContext.StringCache.TryGetValue(strValue, out var cachedStrValue))
 				{
-					Func<string, object> converter;
-					if (parseContext.IndexedFieldConverters.TryGetValue(fieldValues.Count, out converter))
+					if (parseContext.IndexedFieldConverters.TryGetValue(fieldValues.Count, out var converter))
 					{
 						convertedValue = converter(strValue);
 						parseContext.StringCache.Add(strValue, convertedValue);
@@ -357,8 +355,7 @@ namespace EtlGate
 					var indexedFieldConverters = new Dictionary<int, Func<string, object>>();
 					foreach (var kvp in parseContext.HeaderRowFieldIndexes)
 					{
-						Func<string, object> converter;
-						if (parseContext.NamedFieldConverters.TryGetValue(kvp.Key, out converter))
+						if (parseContext.NamedFieldConverters.TryGetValue(kvp.Key, out var converter))
 						{
 							indexedFieldConverters[kvp.Value] = converter;
 						}
