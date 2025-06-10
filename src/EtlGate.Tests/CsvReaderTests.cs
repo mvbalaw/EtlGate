@@ -296,7 +296,7 @@ namespace EtlGate.Tests
 			public void Given_a_stream_containing__QUOTE_QUOTE_a__should_throw_a_parse_exception_due_to_unescaped_quote()
 			{
 				const string input = "\"\"a\",c";
-				var exception = Assert.Throws<ParseException>(() =>Check(input, new Record[] { }));
+				Assert.Throws<ParseException>(() =>Check(input, new Record[] { }));
 			}
 
 			[Test]
